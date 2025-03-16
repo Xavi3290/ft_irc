@@ -18,9 +18,9 @@
 #### 📌 Tipos de sockets
 
 En el dominio PF_INET se definen los siguientes tipos de sockets:
-• Sockets Stream (TCP)
-• Sockets Datagram (UDP)
-• Sockets Raw (IP y Red)
+- Sockets Stream (TCP)
+- Sockets Datagram (UDP)
+- Sockets Raw (IP y Red)
 
 #### 📌 Creación de sockets
 Función para crear sockets:
@@ -31,14 +31,14 @@ Función para crear sockets:
 
 int socket(int domain, int type, int protocol);
 ```
-• `sockfd`: Identificador de socket. Se utilizará para conectarse, recibir
+- `sockfd`: Identificador de socket. Se utilizará para conectarse, recibir
 conexiones, enviar y recibir datos, etc.
-• `domain`: Dominio donde se realiza la conexión. Para esta práctica, el dominio
+- `domain`: Dominio donde se realiza la conexión. Para esta práctica, el dominio
 será siempre `PF_INET`.
-• `type`: Se corresponde con el tipo de socket que se va a crear, y puede tomar los
+- `type`: Se corresponde con el tipo de socket que se va a crear, y puede tomar los
 siguientes valores (definidos como constantes en las librerías): `SOCK_STREAM,
 `SOCK_DGRAM`
-• `protocol`: Indica el protocolo que se va a utilizar. El valor 0 indica que
+- `protocol`: Indica el protocolo que se va a utilizar. El valor 0 indica que
 seleccione el protocolo más apropiado (TCP para SOCK_STREAM, UDP para
 SOCK_DGRAM).
 
@@ -95,11 +95,11 @@ addrlen);
 int bind(int sockfd, struct sockaddr *my_addr, int
 addrlen);
 ```
-• **`sockfd`**: Identificador de socket devuelto por la función socket().
-• **`my_addr`**: Es un puntero a una estructura **`sockaddr`** que contiene la IP de la
+- **`sockfd`**: Identificador de socket devuelto por la función socket().
+- **`my_addr`**: Es un puntero a una estructura **`sockaddr`** que contiene la IP de la
 máquina local y el número de puerto que se va a asignar al socket (esta
 estructura se detalla en la siguiente sección).
-• **`addrlen`**: debe estar establecido al tamaño de la estructura anterior, utilizando
+- **`addrlen`**: debe estar establecido al tamaño de la estructura anterior, utilizando
 para ello la función **`sizeof()`**.
 
 Es importante destacar que todas las funciones de sockets esperan recibir como
