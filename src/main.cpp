@@ -7,6 +7,7 @@
 #include <arpa/inet.h> // inet_addr() - convert ip string to binary
 #include <unistd.h> // close()
 
+#define MAX_CLIENTS 5  // Número máximo de conexiones en espera
 
 int main(int argc, char **argv)
 {
@@ -32,7 +33,7 @@ int main(int argc, char **argv)
 		return(1);
 	}
 
-	//SOCKETS ADRESS
+	//SOCKETS ADDRESS
 	struct sockaddr_in address = {};
 
 	address.sin_family = AF_INET;
@@ -50,8 +51,21 @@ int main(int argc, char **argv)
 		return(1);
 	}
 
-	std::cout << "Socket creado y enlazado al puerto " << port << " correctamente." << std::endl;
 	
+	// ESCUCHANDO CONEXIONES ENTRANTES
+	if (listen(server_fd, MAX_CLIENTS) < 0)
+	{
+		std::cout << "Error: listen function crash" << std::endl;
+		return 1;
+	}
+	
+	std::cout << "Socket escuchando en el puerto " << port << "..." << std::endl;
+	
+	while (1)
+	{
+		sleep(1);
+	}
+
 	close(server_fd);
 
     return 0;

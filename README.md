@@ -121,3 +121,36 @@ ret = bind (server_fd, (struct sockaddr *)&sin, sizeof (sin));
 if(ret < 0)
 	perror(“Error binding the socket”);
 ```
+
+#### 📌 ESCUCHANDO CONEXIONES
+
+Función listen();
+```c++
+if (listen(server_fd, MAX_CLIENTS) < 0) {
+    std::cerr << "Error en listen\n";
+    return 1;
+}
+```
+
+- `listen(server_fd, MAX_CLIENTS)` pone el socket en **modo pasivo**, permitiendo que el sistema acepte conexiones entrantes.
+- Si falla, el servidor imprime `Error en listen` y termina.
+
+#### 📝 Tester de la conexión
+
+*Test* 1:
+```bash
+nc 127.0.0.1 6667
+```
+No devuelve ningún error
+
+*Test* 2:
+```bash
+sudo lsof -i :6667
+```
+retorna:
+```bash
+COMMAND   PID    USER   FD   TYPE  DEVICE SIZE/OFF NODE NAME  
+ircserv 27706 mmaltas    3u  IPv4 9595251      0t0  TCP *:ircu-3 (LISTEN)
+```
+
+
