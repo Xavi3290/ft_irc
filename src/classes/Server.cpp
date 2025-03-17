@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/13 20:33:45 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/17 22:30:38 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -22,6 +22,7 @@
 #include <sys/socket.h> // Para socket(), bind(), listen(), accept(), setsockopt(), send(), recv()
 #include <netinet/in.h> // Para sockaddr_in y htons()
 #include <cstdio>       // Para perror()
+#include <sstream> 
 
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {}
 

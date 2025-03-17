@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:09:19 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/13 19:24:20 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/17 22:29:54 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <sys/poll.h> // Para struct pollfd y la función poll()
+#include "Client.hpp"
 
 class Server {
     public:
@@ -30,6 +31,7 @@ class Server {
         std::string _password;
         int _listenFd;
         std::vector<struct pollfd> _pollFds;
+        std::vector<Client*> _clients;
 
         bool setNonBlocking(int fd);
         bool setupSocket();
