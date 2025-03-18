@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:09:19 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/17 22:29:54 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/18 18:04:21 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -37,6 +37,10 @@ class Server {
         bool setupSocket();
         void handleNewConnection();
         void handleClientData(size_t index);
+
+        Client* findClientByFd(int fd);
+        void removeClient(int fd);
+        void parseCommand(Client *client, const std::string &message);
 };
 
 #endif

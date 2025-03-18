@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/17 22:30:38 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/18 18:52:07 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -116,9 +116,67 @@ void Server::handleNewConnection() {
         client_poll.fd = client_fd;
         client_poll.events = POLLIN; // Monitorizar para ver si hay datos entrantes
         _pollFds.push_back(client_poll);
+
+        Client *newClient = new Client(client_fd);
+        _clients.push_back(newClient);
+
         std::cout << "New connection accepted: fd = " << client_fd << std::endl;
     } else {
         perror("accept");
+    }
+}
+
+Client *Server::findClientByFd(int fd) {
+    for (size_t i =0; i < _clients.size(); i++) {
+        if (_clients[i]->getFd() == fd) {
+            return _clients[i];
+        }
+    }
+    return NULL;
+}
+
+void Server::removeClient(int fd) {
+    for (size_t i = 0; i < _clients.size(); i++) {
+        if (_clients[i]->getFd() == fd) {
+            delete _clients[i];
+            _clients.erase(_clients.begin() + i);
+            break;
+        }
+    }
+}
+
+void Server::parseCommand(Client *client, const std::string &message) {
+    std::istringstream iss(message);
+    std::string command;
+    iss >> command;
+
+    if (command == "NICK") {
+        std::string newNick;
+        iss >> newNick;
+        client->setNickname(newNick);
+        std::cout << "Client " << client->getFd() << " set nickname to " << newNick << std::endl;
+    }
+    else if (command == "USER") {
+        std::string username;
+        iss >> username;
+        client->setUsername(username);
+        std::cout << "Client " << client->getFd() << " set username to " << username << std::endl;
+        if (!client->getNickname().empty() && !client->getUsername().empty()) {
+            std::string welcome = "Welcome to the IRC server!\r\n";
+            send(client->getFd(), welcome.c_str(), welcome.length(), 0);
+            client->setRegistered(true);
+            std::cout << "Client " << client->getFd() << " registered." << std::endl;
+        }
+    }
+    else if (command == "PING") {
+        std::string parameter;
+        iss >> parameter;
+        std::string pong = "PONG " + parameter + "\r\n";
+        send(client->getFd(), pong.c_str(), pong.size(), 0);
+        std::cout << "Responding with: " << pong;
+    }
+    else {
+        std::cout << "Unknown command from client " << client->getFd() << ": " << message;
     }
 }
 
@@ -127,16 +185,23 @@ void Server::handleClientData(size_t index) {
     size_t bytes_read = read(_pollFds[index].fd, buffer, sizeof(buffer) - 1);
     if (bytes_read > 0) {
         buffer[bytes_read] = '\0';
-        std::cout << "Recived data from client " << _pollFds[index].fd << " - " << buffer;   //sin std::endl para no hacer flush?
+        std::string message(buffer);
+        Client *client = findClientByFd(_pollFds[index].fd);
+        if (client)
+            parseCommand(client, message);
+        else
+            std::cout << "Recived data from unknown client fd: " << _pollFds[index].fd << std::endl;   //sin std::endl para no hacer flush?
         // Aquí se puede añadir el parseo y la gestión de comandos IRC
     } else if (bytes_read == 0) {
         std::cout << "Client " << _pollFds[index].fd << " disconnected" << std::endl;
         close(_pollFds[index].fd);
+        removeClient(_pollFds[index].fd);
         _pollFds.erase(_pollFds.begin() + index);
     } else  {
         if (errno != EWOULDBLOCK && errno != EAGAIN) {
             perror("read");
             close(_pollFds[index].fd);
+            removeClient(_pollFds[index].fd);
             _pollFds.erase(_pollFds.begin() + index);
         }
     }
