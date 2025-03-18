@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/18 18:52:07 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/18 19:41:58 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,9 +29,14 @@ Server::Server(int port, const std::string &password) : _port(port), _password(p
 Server::~Server() {
     if (_listenFd != -1)
         close(_listenFd);
-
     for (size_t i = 1; i < _pollFds.size(); i++) {
         close(_pollFds[i].fd);
+    }
+    for (size_t i = 0; i < _clients.size(); i++) {
+        delete _clients[i];
+    }
+    for(size_t i = 0; i < _channels.size(); i++) {
+        delete _channels[i];   
     }
 }
 
@@ -175,6 +180,34 @@ void Server::parseCommand(Client *client, const std::string &message) {
         send(client->getFd(), pong.c_str(), pong.size(), 0);
         std::cout << "Responding with: " << pong;
     }
+    else if (command == "JOIN") {
+        std::string channelName;
+        iss >> channelName;
+        Channel *channel = getChannelByName(channelName);
+        if (!channel) {
+            channel = new Channel(channelName);
+            _channels.push_back(channel);
+        }
+        channel->addClient(client);
+        std::string joinMsg = "You have joined channel " + channelName + "\r\n";
+        send(client->getFd(), joinMsg.c_str(), joinMsg.size(), 0);
+        std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
+    }
+    else if (command == "PRIVMSG") {
+        std::string target;
+        iss >> target;
+        std::string msg;
+        getline(iss, msg);
+        Channel *channel = getChannelByName(target);
+        if (channel && channel->hasClient(client)) {
+            std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
+            channel->broadcastMessage(broadcast, client);
+            std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
+        } else {
+            std::string errorMsg = "Error: you are not in channel " + target + "\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        }
+    }
     else {
         std::cout << "Unknown command from client " << client->getFd() << ": " << message;
     }
@@ -229,4 +262,13 @@ void Server::run() {
             }
         }
     }  
+}
+
+Channel *Server::getChannelByName(const std::string &name) {
+    for (size_t i = 0; i < _channels.size(); i++) {
+        if (_channels[i]->getName() == name) {
+            return _channels[i];
+        }
+    }
+    return NULL;
 }
