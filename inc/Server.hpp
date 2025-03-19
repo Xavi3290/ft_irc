@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <sys/poll.h> // Para struct pollfd y la función poll()
+#include <arpa/inet.h>   // Para sockaddr_in, inet_addr()
 #include "Client.hpp"
 #include "Channel.hpp"
 
@@ -31,14 +32,17 @@ class Server {
         int _port;
         std::string _password;
         int _listenFd;
-        std::vector<struct pollfd> _pollFds;
+        struct sockaddr_in _server_addr;
+        socklen_t _addrlen;
+        std::vector<pollfd> _pollFds;
         std::vector<Client*> _clients;
         std::vector<Channel*> _channels;
 
         bool setNonBlocking(int fd);
         bool setupSocket();
         void handleNewConnection();
-        void handleClientData(size_t index);
+        void handleClientData(size_t i);
+        //void handleClientData();
 
         Client* findClientByFd(int fd);
         void removeClient(int fd);

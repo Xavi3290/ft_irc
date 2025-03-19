@@ -75,13 +75,13 @@ bool Server::setupSocket() {
     }
 
     // Configurar la direccion del servidor (IP: cualquier dirección local, puerto especificado)
-    struct sockaddr_in server_addr;
-    std::memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_addr.s_addr = INADDR_ANY;
-    server_addr.sin_port = htons(_port);
+    _addrlen = sizeof(_server_addr);
+    std::memset(&_server_addr, 0, _addrlen);
+    _server_addr.sin_family = AF_INET;
+    _server_addr.sin_addr.s_addr = INADDR_ANY;
+    _server_addr.sin_port = htons(_port);
 
-    if (bind(_listenFd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    if (bind(_listenFd, (struct sockaddr *)&_server_addr, sizeof(_server_addr)) < 0) {
         perror("blind");
         close(_listenFd);
         return false;
@@ -109,9 +109,9 @@ bool Server::init() {
 }
 
 void Server::handleNewConnection() {
-    struct sockaddr_in client_addr;
-    socklen_t client_len = sizeof(client_addr);
-    int client_fd = accept(_listenFd, (struct sockaddr *)&client_addr, &client_len);
+    //struct sockaddr_in client_addr;
+    //socklen_t client_len = sizeof(client_addr);
+    int client_fd = accept(_listenFd, (struct sockaddr *)&_server_addr, &_addrlen);
     if (client_fd >= 0) {
         if (!setNonBlocking(client_fd)) {
             close(client_fd);
@@ -213,29 +213,39 @@ void Server::parseCommand(Client *client, const std::string &message) {
     }
 }
 
-void Server::handleClientData(size_t index) {
-    char buffer[1024];
-    size_t bytes_read = read(_pollFds[index].fd, buffer, sizeof(buffer) - 1);
-    if (bytes_read > 0) {
-        buffer[bytes_read] = '\0';
-        std::string message(buffer);
-        Client *client = findClientByFd(_pollFds[index].fd);
-        if (client)
-            parseCommand(client, message);
+void Server::handleClientData(size_t i)
+{
+    if (_pollFds[i].revents & POLLIN)
+    {
+        char buffer[1024];
+        int bytes_read = recv(_pollFds[i].fd, buffer, sizeof(buffer), 0);
+        if (bytes_read > 0)
+        {
+            //buffer[bytes_read] = '\0';
+            std::string message(buffer);
+            Client *client = findClientByFd(_pollFds[i].fd);
+            if (client)
+                parseCommand(client, message);
+            else
+                std::cout << "Recived data from unknown client fd: " << _pollFds[i].fd << std::endl;   //sin std::endl para no hacer flush?
+            // Aquí se puede añadir el parseo y la gestión de comandos IRC
+        }
+        else if (bytes_read == 0)
+        {
+            std::cout << "Client " << _pollFds[i].fd << " disconnected" << std::endl;
+            close(_pollFds[i].fd);
+            removeClient(_pollFds[i].fd);
+            _pollFds.erase(_pollFds.begin() + i);
+        }
         else
-            std::cout << "Recived data from unknown client fd: " << _pollFds[index].fd << std::endl;   //sin std::endl para no hacer flush?
-        // Aquí se puede añadir el parseo y la gestión de comandos IRC
-    } else if (bytes_read == 0) {
-        std::cout << "Client " << _pollFds[index].fd << " disconnected" << std::endl;
-        close(_pollFds[index].fd);
-        removeClient(_pollFds[index].fd);
-        _pollFds.erase(_pollFds.begin() + index);
-    } else  {
-        if (errno != EWOULDBLOCK && errno != EAGAIN) {
-            perror("read");
-            close(_pollFds[index].fd);
-            removeClient(_pollFds[index].fd);
-            _pollFds.erase(_pollFds.begin() + index);
+        {
+            if (errno != EWOULDBLOCK && errno != EAGAIN)
+            {
+                perror("read");
+                close(_pollFds[i].fd);
+                removeClient(_pollFds[i].fd);
+                _pollFds.erase(_pollFds.begin() + i);
+            }
         }
     }
 }
