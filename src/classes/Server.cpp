@@ -82,7 +82,7 @@ bool Server::setupSocket() {
     _server_addr.sin_port = htons(_port);
 
     if (bind(_listenFd, (struct sockaddr *)&_server_addr, sizeof(_server_addr)) < 0) {
-        perror("blind");
+        perror("bind");
         close(_listenFd);
         return false;
     }
@@ -222,7 +222,7 @@ void Server::handleClientData(size_t i)
         if (bytes_read > 0)
         {
             //buffer[bytes_read] = '\0';
-            std::string message(buffer);
+            std::string message(buffer, bytes_read);
             Client *client = findClientByFd(_pollFds[i].fd);
             if (client)
                 parseCommand(client, message);
@@ -236,15 +236,17 @@ void Server::handleClientData(size_t i)
             close(_pollFds[i].fd);
             removeClient(_pollFds[i].fd);
             _pollFds.erase(_pollFds.begin() + i);
+            i--;
         }
         else
         {
             if (errno != EWOULDBLOCK && errno != EAGAIN)
             {
-                perror("read");
+                perror("recv");
                 close(_pollFds[i].fd);
                 removeClient(_pollFds[i].fd);
                 _pollFds.erase(_pollFds.begin() + i);
+                i--;
             }
         }
     }
