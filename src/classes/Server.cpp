@@ -114,7 +114,6 @@ void Server::handleNewConnection() {
     int client_fd = accept(_listenFd, (struct sockaddr *)&_server_addr, &_addrlen);
     if (client_fd >= 0) {
         if (!setNonBlocking(client_fd)) {
-            std::cout << "ENTRA AQUI????\n";
             close(client_fd);
             return;
         }
@@ -273,7 +272,6 @@ void Server::run() {
                 // Dado que el vector _pollFds puede modificarse (al eliminar un cliente desconectado), reajustamos el índice
                 //i--;
             }
-            std::cout << i << std::endl;
         }
     }  
 }
