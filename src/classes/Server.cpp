@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/20 17:12:13 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/26 20:19:39 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,34 +155,86 @@ void Server::parseCommand(Client *client, const std::string &message) {
     std::string command;
     iss >> command;
 
-    if (command == "NICK") {
+    if (command != "PASS" && !client->hasProvidedPass()) {
+        std::string errorMsg = ":server 451 * :You have not registered\r\n";
+        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        return;
+    }
+
+    if (command == "PASS") {
+        std::string pass;
+        if (!(iss >> pass)) {
+            std::string errorMsg = ":server 461 PASS :Not enough parameters\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
+        if (pass != _password) {
+            std::string errorMsg = ":server 464 * :Password incorrect\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            std::cout << "Client " << client->getFd() << " provided invalid password." << std::endl;
+            close(client->getFd());
+            removeClient(client->getFd());
+            return;
+        } else {
+            client->setPassProvided(true);
+            std::cout << "Client " << client->getFd() << " provided valid password." << std::endl;
+        }
+    } 
+    else if (command == "NICK") {
         std::string newNick;
-        iss >> newNick;
+        if (!(iss >> newNick)) {
+            std::string errorMsg = ":server 431 * :No nickname given\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         client->setNickname(newNick);
         std::cout << "Client " << client->getFd() << " set nickname to " << newNick << std::endl;
+        if (!client->getNickname().empty() && !client->getUsername().empty() && client->hasProvidedPass() && !client->isRegistered()) {
+            std::string welcome = ":server 001 " + client->getNickname() + " :Welcome to the IRC server!\r\n";
+            send(client->getFd(), welcome.c_str(), welcome.size(), 0);
+            client->setRegistered(true);
+            std::cout << "Client " << client->getFd() << " registered." << std::endl;
+        }
     }
     else if (command == "USER") {
         std::string username;
-        iss >> username;
+        if (!(iss >> username)) {
+            std::string errorMsg = ":server 461 USER :Not enough parameters\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         client->setUsername(username);
         std::cout << "Client " << client->getFd() << " set username to " << username << std::endl;
-        if (!client->getNickname().empty() && !client->getUsername().empty()) {
-            std::string welcome = "Welcome to the IRC server!\r\n";
-            send(client->getFd(), welcome.c_str(), welcome.length(), 0);
+        if (!client->getNickname().empty() && !client->getUsername().empty() && client->hasProvidedPass() && !client->isRegistered()) {
+            std::string welcome = ":server 001 " + client->getNickname() + " :Welcome to the IRC server!\r\n";
+            send(client->getFd(), welcome.c_str(), welcome.size(), 0);
             client->setRegistered(true);
             std::cout << "Client " << client->getFd() << " registered." << std::endl;
         }
     }
     else if (command == "PING") {
         std::string parameter;
-        iss >> parameter;
+        if (!(iss >> parameter)) {
+            std::string errorMsg = ":server 409 * :No origin specified for PING\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         std::string pong = "PONG " + parameter + "\r\n";
         send(client->getFd(), pong.c_str(), pong.size(), 0);
         std::cout << "Responding with: " << pong;
     }
     else if (command == "JOIN") {
+        if (!client->isRegistered()) {
+            std::string errorMsg = ":server 451 * :You have not registered\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         std::string channelName;
-        iss >> channelName;
+        if (!(iss >> channelName)) {
+            std::string errorMsg = ":server 461 JOIN :Not enough parameters\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         Channel *channel = getChannelByName(channelName);
         if (!channel) {
             channel = new Channel(channelName);
@@ -194,8 +246,17 @@ void Server::parseCommand(Client *client, const std::string &message) {
         std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
     }
     else if (command == "PRIVMSG") {
+        if (!client->isRegistered()) {
+            std::string errorMsg = ":server 451 * :You have not registered\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         std::string target;
-        iss >> target;
+        if (!(iss >> target)) {
+            std::string errorMsg = ":server 461 PRIVMSG :Not enough parameters\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
         std::string msg;
         getline(iss, msg);
         Channel *channel = getChannelByName(target);
@@ -208,7 +269,35 @@ void Server::parseCommand(Client *client, const std::string &message) {
             send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         }
     }
+    else if (command == "PART") {
+        if (!client->isRegistered()) {
+            std::string errorMsg = "451 :You have not registered\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
+        std::string channelName;
+        iss >> channelName;
+        if (channelName.empty()) {
+            std::string errorMsg = "461 PART :Not enough parameters\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
+        Channel *channel = getChannelByName(channelName);
+        if (channel && channel->hasClient(client)) {
+            channel->removeClient(client);
+            std::string partMsg = "You have left channel " + channelName + "\r\n";
+            send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
+            std::cout << "Client " << client->getFd() << " left channel " << channelName << std::endl;
+            std::string broadcast = ":" + client->getNickname() + " has left channel " + channelName + "\r\n";
+            channel->broadcastMessage(broadcast, client);
+        } else {
+            std::string errorMsg = "Error: you are not in channel " + channelName + "\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        }
+    }
     else {
+        std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
+        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         std::cout << "Unknown command from client " << client->getFd() << ": " << message;
     }
 }

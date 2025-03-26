@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 22:01:05 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/17 22:28:15 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/26 19:46:20 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,12 +27,15 @@ class Client {
         void setUsername(const std::string &username);
         bool isRegistered() const;
         void setRegistered(bool registered);
+        bool hasProvidedPass() const;
+        void setPassProvided(bool provided);
 
     private:
         int _fd;
         std::string _nickname;
         std::string _username;
         bool _registered;
+        bool _passProvided;
 };
 
 #endif
