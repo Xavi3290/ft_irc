@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/18 19:04:16 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/26 19:46:23 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/27 17:51:43 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,7 @@ class Channel {
         void removeClient(Client *client);
         bool hasClient(Client *client) const;
         void broadcastMessage(const std::string &message, Client *sender);
+        size_t getClientCount() const;
 
     private:
         std::string _name;

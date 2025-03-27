@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/26 20:19:39 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/27 18:07:04 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -155,6 +155,7 @@ void Server::parseCommand(Client *client, const std::string &message) {
     std::string command;
     iss >> command;
 
+
     if (command != "PASS" && !client->hasProvidedPass()) {
         std::string errorMsg = ":server 451 * :You have not registered\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
@@ -259,6 +260,97 @@ void Server::parseCommand(Client *client, const std::string &message) {
         }
         std::string msg;
         getline(iss, msg);
+
+        
+
+        if (msg.find("!bot") != std::string::npos) {
+            if (msg.find("!bot hello") != std::string::npos) {
+                std::string botResponse = ":Bot PRIVMSG " + target + " :Hello, I am Bot!\r\n";
+                Channel *channel = getChannelByName(target);
+                if (channel) {
+                    channel->broadcastMessage(botResponse, NULL);
+                    std::cout << "Bot responded in channel " << target << std::endl;
+                }
+            }
+            else if (msg.find("!bot help") != std::string::npos) {
+                std::string helpMsg = ":Bot PRIVMSG " + target + " :Available commands: !bot help, !bot time, !bot date, !bot stats, !bot rps <rock|paper|scissors>\r\n";
+                Channel *channel = getChannelByName(target);
+                if (channel) {
+                    channel->broadcastMessage(helpMsg, NULL);
+                    std::cout << "Bot provided help in channel " << target << std::endl;
+                }
+            } 
+            else if (msg.find("!bot time") != std::string::npos) {
+                time_t now = time(NULL);
+                struct tm *lt = localtime(&now);
+                char timeStr[64];
+                strftime(timeStr, sizeof(timeStr), "%H:%M:%S", lt);
+                std::string timeMsg = ":Bot PRIVMSG " + target + " :Current time is " + std::string(timeStr) + "\r\n";
+                Channel *channel = getChannelByName(target);
+                if (channel) {
+                    channel->broadcastMessage(timeMsg, NULL);
+                    std::cout << "Bot provided time in channel " << target << std::endl;
+                }
+            } 
+            else if (msg.find("!bot date") != std::string::npos) {
+                time_t now = time(NULL);
+                struct tm *lt = localtime(&now);
+                char dateStr[64];
+                strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", lt);
+                std::string dateMsg = ":Bot PRIVMSG " + target + " :Today's date is " + std::string(dateStr) + "\r\n";
+                Channel *channel = getChannelByName(target);
+                if (channel) {
+                    channel->broadcastMessage(dateMsg, NULL);
+                    std::cout << "Bot provided date in channel " << target << std::endl;
+                }
+            } 
+            else if (msg.find("!bot stats") != std::string::npos) {
+                Channel *channel = getChannelByName(target);
+                if (channel) {
+                    size_t count = channel->getClientCount();
+                    std::ostringstream oss;
+                    oss << count;
+                    std::string statsMsg = ":Bot PRIVMSG " + target + " :There are " + oss.str() + " users in channel " + target + "\r\n";
+                    channel->broadcastMessage(statsMsg, NULL);
+                    std::cout << "Bot provided stats in channel " << target << std::endl;
+                }
+            } 
+            else if (msg.find("!bot rps") != std::string::npos) {
+                std::istringstream rpsStream(msg);
+                std::string botCmd, rpsCmd, userMove;
+                rpsStream >> botCmd >> rpsCmd >> userMove;
+                if (userMove != "rock" && userMove != "paper" && userMove != "scissors") {
+                    std::string errorMsg = ":Bot PRIVMSG " + target + " :Invalid move. Use rock, paper, or scissors.\r\n";
+                    Channel *channel = getChannelByName(target);
+                    if (channel) {
+                        channel->broadcastMessage(errorMsg, NULL);
+                    }
+                    return;
+                }
+                srand(time(NULL));
+                int botIndex = rand() % 3;
+                std::string moves[3] = {"rock", "paper", "scissors"};
+                std::string botMove = moves[botIndex];
+                std::string result;
+                if (userMove == botMove) {
+                    result = "It's a tie!";
+                } else if ((userMove == "rock" && botMove == "scissors") ||
+                        (userMove == "paper" && botMove == "rock") ||
+                        (userMove == "scissors" && botMove == "paper")) {
+                    result = "You win!";
+                } else {
+                    result = "I win!";
+                }
+                std::string rpsMsg = ":Bot PRIVMSG " + target + " :You chose " + userMove + ", I chose " + botMove + ". " + result + "\r\n";
+                Channel *channel = getChannelByName(target);
+                if (channel) {
+                    channel->broadcastMessage(rpsMsg, NULL);
+                    std::cout << "Bot played RPS in channel " << target << std::endl;
+                }
+            }
+            return;
+        }
+        
         Channel *channel = getChannelByName(target);
         if (channel && channel->hasClient(client)) {
             std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
@@ -292,6 +384,51 @@ void Server::parseCommand(Client *client, const std::string &message) {
             channel->broadcastMessage(broadcast, client);
         } else {
             std::string errorMsg = "Error: you are not in channel " + channelName + "\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        }
+    }
+    else if (command == "FILE") {
+        if (!client->isRegistered()) {
+            std::string errorMsg = ":server 451 * :You have not registered\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
+        std::string target, filename;
+        size_t filesize;
+        if (!(iss >> target >> filename >> filesize)) {
+            std::string errorMsg = ":server 461 FILE :Not enough parameters\r\n";
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
+        
+        std::ostringstream oss;
+        oss << filesize;
+        std::string info = ":server NOTICE " + target + " :Incoming file " + filename + " (" + oss.str() + " bytes)\r\n";
+        send(client->getFd(), info.c_str(), info.size(), 0);
+
+        std::string filedata;
+        filedata.resize(filesize);
+        size_t total_read = 0;
+        while (total_read < filesize) {
+            int bytes = recv(client->getFd(), &filedata[total_read], filesize - total_read, 0);
+            if (bytes <= 0) {
+                std::string errorMsg = ":server ERROR :File transfer interrupted\r\n";
+                send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+                return;
+            }
+            total_read += bytes;
+        }
+
+        Channel *channel = getChannelByName(target);
+        if (channel) {
+            std::ostringstream oss2;
+            oss2 << filesize;
+            std::string broadcast = ":" + client->getNickname() + " FILE " + filename + " " + oss2.str() + "\r\n" + filedata;
+            channel->broadcastMessage(broadcast, client);
+            std::cout << "File " << filename << " (" << filesize << " bytes) sent by client " 
+                    << client->getFd() << " to channel " << target << std::endl;
+        } else {
+            std::string errorMsg = ":server 402 " + target + " :No such nick/channel\r\n";
             send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         }
     }
