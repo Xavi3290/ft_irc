@@ -30,6 +30,9 @@ class Client {
         bool hasProvidedPass() const;
         void setPassProvided(bool provided);
 
+        std::string getPrefix() const;
+
+
     private:
         int _fd;
         std::string _nickname;

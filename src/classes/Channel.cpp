@@ -55,3 +55,8 @@ void Channel::broadcastMessage(const std::string &message, Client *sender) {
 size_t Channel::getClientCount() const {
     return _clients.size();
 }
+
+const std::vector<Client*> &Channel::getClients()
+{
+    return _clients;
+}

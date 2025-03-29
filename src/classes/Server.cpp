@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../inc/Server.hpp"
+#include "../../inc/NumericReplies.hpp"
 
 #include <iostream>     // Para salida por consola
 #include <cstdlib>      // Para atoi() y EXIT_SUCCESS/EXIT_FAILURE
@@ -40,6 +41,61 @@ Server::~Server() {
     }
 }
 
+// SENDERS TYPES
+
+void Server::sendToChannel(Client *sender, const std::string &channelName, const std::string &message)
+{
+    Channel *channel = getChannelByName(channelName);
+    if (!channel)
+    {
+        std::string errorMsg = NumericReplies::reply(ERR_NOSUCHCHANNEL, sender->getNickname(), channelName);
+        send(sender->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        return;
+    }
+
+    if (!channel->hasClient(sender))
+    {
+        std::string errorMsg = NumericReplies::reply(ERR_CANNOTSENDTOCHAN, sender->getNickname(), channelName);
+        send(sender->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        return;
+    }
+
+    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@localhost PRIVMSG " + channelName + " :" + message + "\r\n";
+    channel->broadcastMessage(fullMsg, sender);
+}
+
+void Server::sendToUser(Client *sender, const std::string &targetNick, const std::string &message)
+{
+    Client *receiver = findClientByNick(targetNick);
+    if (!receiver) {
+        std::string errorMsg = NumericReplies::reply(ERR_NOSUCHNICK, sender->getNickname(), targetNick);
+        send(sender->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        return;
+    }
+
+    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@localhost PRIVMSG " + receiver->getNickname() + " :" + message + "\r\n";
+    send(receiver->getFd(), fullMsg.c_str(), fullMsg.size(), 0);
+}
+
+void Server::sendToAll(Client *sender, const std::string &message)
+{
+    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@localhost NOTICE * :" + message + "\r\n";
+    for (size_t i = 0; i < _clients.size(); i++) {
+        Client *target = _clients[i];
+        if (target != sender)
+            send(target->getFd(), fullMsg.c_str(), fullMsg.size(), 0);
+    }
+}
+Client* Server::findClientByNick(const std::string &nickname) {
+    for (size_t i = 0; i < _clients.size(); ++i) {
+        if (_clients[i]->getNickname() == nickname) {
+            return _clients[i];
+        }
+    }
+    return NULL;
+}
+
+
 bool Server::setNonBlocking(int fd) {
     int flags = fcntl(fd, F_GETFL, 0);
     if (flags < 0) {
@@ -52,6 +108,7 @@ bool Server::setNonBlocking(int fd) {
     }
     return true;
 }
+
 
 bool Server::setupSocket() {
     _listenFd = socket(AF_INET, SOCK_STREAM, 0);
@@ -225,26 +282,14 @@ void Server::parseCommand(Client *client, const std::string &message) {
         std::cout << "Responding with: " << pong;
     }
     else if (command == "JOIN") {
-        if (!client->isRegistered()) {
-            std::string errorMsg = ":server 451 * :You have not registered\r\n";
-            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-            return;
-        }
         std::string channelName;
-        if (!(iss >> channelName)) {
-            std::string errorMsg = ":server 461 JOIN :Not enough parameters\r\n";
+        if (!(iss >> channelName))
+        {
+            std::string errorMsg = NumericReplies::reply(ERR_NEEDMOREPARAMS, client->getNickname(), command);
             send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
             return;
         }
-        Channel *channel = getChannelByName(channelName);
-        if (!channel) {
-            channel = new Channel(channelName);
-            _channels.push_back(channel);
-        }
-        channel->addClient(client);
-        std::string joinMsg = "You have joined channel " + channelName + "\r\n";
-        send(client->getFd(), joinMsg.c_str(), joinMsg.size(), 0);
-        std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
+        handleJoin(client, channelName);
     }
     else if (command == "PRIVMSG") {
         if (!client->isRegistered()) {
@@ -437,6 +482,56 @@ void Server::parseCommand(Client *client, const std::string &message) {
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         std::cout << "Unknown command from client " << client->getFd() << ": " << message;
     }
+}
+
+void Server::handleJoin(Client *client, const std::string &channelName)
+{
+    if (!client->isRegistered()) {
+            std::string errorMsg = NumericReplies::reply(ERR_NOTREGISTERED, client->getNickname());
+            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            return;
+        }
+
+        Channel *channel = getChannelByName(channelName);
+        if (!channel) {
+            channel = new Channel(channelName);
+            _channels.push_back(channel);
+        }
+        if (!channel->hasClient(client))
+            channel->addClient(client);
+    
+        std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channelName + "\r\n";
+        channel->broadcastMessage(joinMsg, NULL);
+        
+        //SI NO HAY TOPIC
+        std::string topicMsg = NumericReplies::reply(RPL_NOTOPIC, client->getNickname(), channelName);
+        send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
+
+        //LISTAR USUARIOS
+        const std::vector<Client *> &clients = channel->getClients();
+        std::string nameList;
+        for (size_t i = 0; i < clients.size(); ++i)
+            nameList += clients[i]->getNickname() + " ";
+
+        std::string namesReply = ":irc.42.localhost 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+        send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+
+        // 4. Fin de lista (RPL_ENDOFNAMES)
+        std::string endMsg = NumericReplies::reply(RPL_ENDOFNAMES, client->getNickname(), channelName);
+        send(client->getFd(), endMsg.c_str(), endMsg.size(), 0);
+        
+        //ANTIGUO MODIFICADO
+
+        // std::string joinMsg = "You have joined channel " + channelName + "\r\n";
+
+        //AHORA HexChat CREA LOS CANALES CORRECTAMENTE
+        // FALTA IMPLEMENTAR LISTA DE USUARIOS <---- NO SE SI ES NECESARIO
+        
+        // std::string joinMsg = ":" + client->getNickname() + "!" + client->getUsername() + "@localhost JOIN :" + channelName + "\r\n";
+        // send(client->getFd(), joinMsg.c_str(), joinMsg.size(), 0);
+        // std::string joinMsg2 = ":irc.42.localhost 332" + client->getUsername() + channelName + ":posible TOPIC si hay\r\n";
+        // send(client->getFd(), joinMsg2.c_str(), joinMsg2.size(), 0);
+        // std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
 }
 
 void Server::handleClientData(size_t i)

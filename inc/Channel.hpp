@@ -28,6 +28,7 @@ class Channel {
         bool hasClient(Client *client) const;
         void broadcastMessage(const std::string &message, Client *sender);
         size_t getClientCount() const;
+        const std::vector<Client*> &getClients();
 
     private:
         std::string _name;

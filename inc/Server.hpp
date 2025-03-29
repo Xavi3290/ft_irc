@@ -38,6 +38,10 @@ class Server {
         std::vector<Client*> _clients;
         std::vector<Channel*> _channels;
 
+        void sendToChannel(Client *sender, const std::string &chanelName, const std::string &message);
+        void sendToUser(Client *sender, const std::string &targetNick, const std::string &message);
+        void sendToAll(Client *sender, const std::string &message);
+        
         bool setNonBlocking(int fd);
         bool setupSocket();
         void handleNewConnection();
@@ -45,10 +49,13 @@ class Server {
         //void handleClientData();
 
         Client* findClientByFd(int fd);
+        Client* findClientByNick(const std::string &nickname);
         void removeClient(int fd);
         void parseCommand(Client *client, const std::string &message);
 
         Channel *getChannelByName(const std::string &name);
+
+        void handleJoin(Client *client, const std::string &channelName);
 };
 
 #endif

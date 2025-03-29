@@ -52,3 +52,7 @@ bool Client::hasProvidedPass() const {
 void Client::setPassProvided(bool provided) {
     _passProvided = provided;
 }
+
+std::string Client::getPrefix() const {
+    return _nickname + "!" + _username + "@localhost";
+}
