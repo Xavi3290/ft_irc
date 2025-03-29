@@ -6,14 +6,14 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/17 22:01:09 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/17 22:27:45 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/26 19:51:12 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "../../inc/Client.hpp"
 
 Client::Client(int fd)
-    : _fd(fd), _nickname(""), _username(""), _registered(false) {}
+    : _fd(fd), _nickname(""), _username(""), _registered(false), _passProvided(false) {}
 
 Client::~Client() {}
 
@@ -43,4 +43,12 @@ bool Client::isRegistered() const {
 
 void Client::setRegistered(bool reg) {
     _registered = reg;
+}
+
+bool Client::hasProvidedPass() const {
+    return _passProvided;
+}
+
+void Client::setPassProvided(bool provided) {
+    _passProvided = provided;
 }

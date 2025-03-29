@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/18 19:04:58 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/18 19:16:56 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/03/27 17:51:59 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,4 +50,8 @@ void Channel::broadcastMessage(const std::string &message, Client *sender) {
             send(_clients[i]->getFd(), message.c_str(), message.size(), 0);
         }
     }
+}
+
+size_t Channel::getClientCount() const {
+    return _clients.size();
 }
