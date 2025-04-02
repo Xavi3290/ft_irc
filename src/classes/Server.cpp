@@ -60,7 +60,7 @@ void Server::sendToChannel(Client *sender, const std::string &channelName, const
         return;
     }
 
-    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@localhost PRIVMSG " + channelName + " :" + message + "\r\n";
+    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@host PRIVMSG " + channelName + " :" + message + "\r\n";
     channel->broadcastMessage(fullMsg, sender);
 }
 
@@ -399,8 +399,9 @@ void Server::parseCommand(Client *client, const std::string &message) {
         
         Channel *channel = getChannelByName(target);
         if (channel && channel->hasClient(client)) {
-            std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
-            channel->broadcastMessage(broadcast, client);
+			sendToChannel(client, target, msg);
+           	//std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
+		    //channel->broadcastMessage(broadcast, client);
             std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
         } else {
             std::string errorMsg = "Error: you are not in channel " + target + "\r\n";
@@ -537,6 +538,11 @@ void Server::parseCommand(Client *client, const std::string &message) {
 		else
 			reason = "No reason";
 		Channel *channel = getChannelByName(channelName);
+		if (!channel->isOperator(client)) {
+			std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
 		if (!channel) {
 			std::string errorMsg = ":server 403 " + client->getNickname() + " " + channelName + " :No such channel\r\n";
 			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
@@ -555,11 +561,6 @@ void Server::parseCommand(Client *client, const std::string &message) {
 		}
 		if (!channel->hasClient(target)) {
 			std::string errorMsg = ":server 441 " + client->getNickname() + " " + targetNick + " :They're not on that channel\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			return;
-		}
-		if (!channel->isOperator(client)) {
-			std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
 			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
 			return;
 		}
@@ -587,13 +588,20 @@ void Server::parseCommand(Client *client, const std::string &message) {
 			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
 			return;
 		}
+		if (!channel->isOperator(client)) {
+			std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
 		if (!channel->hasClient(client)) {
 			std::string errorMsg = ":server 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n";
 			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
 			return;
 		}
 		if (newTopic == "No topic") {
-			std::string topicMsg = ":server 331 " + client->getNickname() + " " + channelName + " :No topic is set\r\n";
+			//std::string topicMsg = ":server 331 " + client->getNickname() + " " + channelName + " :No topic is set\r\n";
+			std::string topicMsg = NumericReplies::reply(RPL_NOTOPIC, client->getNickname(), channelName);
+			std::cout << "Topic: " << topicMsg << std::endl;
 			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
 		}
 		else {
@@ -638,7 +646,11 @@ void Server::handleJoin(Client *client, const std::string &channelName)
             send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
             return;
         }
-
+	if(channelName[0] != '#') {
+		std::string errorMsg = NumericReplies::reply(ERR_NOSUCHCHANNEL, client->getNickname(), channelName);
+		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+		return;
+	}
         Channel *channel = getChannelByName(channelName);
         if (!channel) {
             channel = new Channel(channelName);

@@ -20,8 +20,8 @@ std::string NumericReplies::reply(int code, const std::string& nick, const std::
 
     // Asegura que el código siempre tenga tres dígitos
     ss << std::setw(3) << std::setfill('0') << code << " ";
-    ss << (nick.empty() ? "*" : nick) << " :";
-    ss << param << "\r\n";
+    ss << (nick.empty() ? "*" : nick) << " ";
+    ss << param;
 
     switch(code)
     {
@@ -32,7 +32,7 @@ std::string NumericReplies::reply(int code, const std::string& nick, const std::
             ss << ":Your host is irc.42.localhost running version 1.0";
             break;
         case 331:
-            ss << param << ":No topic is set";
+            ss << " :No topic is set";
             break;
         case 332:
             ss << param << ":<topic>"; // <--- TO DO
@@ -40,6 +40,9 @@ std::string NumericReplies::reply(int code, const std::string& nick, const std::
         case 366:
             ss << param << ":End of NAMES list";
             break;
+		case 403:
+			ss << param << ":No such channel";
+			break;
         case 433:
             ss << ":Nickname is already in use";
             break;
