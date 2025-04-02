@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/27 18:07:04 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/04/02 18:27:31 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -398,11 +398,14 @@ void Server::parseCommand(Client *client, const std::string &message) {
         }
         
         Channel *channel = getChannelByName(target);
-        if (channel && channel->hasClient(client)) {
+        if (channel && channel->hasClient(client) && target[0] == '#') {
 			sendToChannel(client, target, msg);
            	//std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
 		    //channel->broadcastMessage(broadcast, client);
             std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
+        } else if(findClientByNick(target)) {
+            sendToUser(client, target, msg);
+            std::cout << "Message from client " << client->getFd() << " to user " << target << std::endl;
         } else {
             std::string errorMsg = "Error: you are not in channel " + target + "\r\n";
             send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
@@ -601,7 +604,6 @@ void Server::parseCommand(Client *client, const std::string &message) {
 		if (newTopic == "No topic") {
 			//std::string topicMsg = ":server 331 " + client->getNickname() + " " + channelName + " :No topic is set\r\n";
 			std::string topicMsg = NumericReplies::reply(RPL_NOTOPIC, client->getNickname(), channelName);
-			std::cout << "Topic: " << topicMsg << std::endl;
 			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
 		}
 		else {

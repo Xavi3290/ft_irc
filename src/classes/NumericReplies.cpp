@@ -47,7 +47,7 @@ std::string NumericReplies::reply(int code, const std::string& nick, const std::
             ss << ":Nickname is already in use";
             break;
         case 401:
-            ss << param << " :No such nick/channel";
+            ss << param << " :No such nick";
             break;
         case 451:
             ss << ":You have not registered";
