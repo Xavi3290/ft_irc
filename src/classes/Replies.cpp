@@ -1,8 +1,11 @@
-#include "../../inc/NumericReplies.hpp"
+#include "../../inc/Replies.hpp"
+#include "../../inc/Client.hpp"
 #include <sstream>
 #include <iomanip>
+#include <iostream>
+#include <sys/socket.h> 
 
-std::string NumericReplies::reply(int code, const std::string& nick, const std::string& param)
+std::string reply(int code, const std::string& nick, const std::string& param)
 {
     std::stringstream ss;
     ss << ":irc.42.localhost ";
@@ -46,4 +49,12 @@ std::string NumericReplies::reply(int code, const std::string& nick, const std::
 
     ss << "\r\n";
     return ss.str();
+}
+
+
+void sendReply(Client* client, int code, const std::string& message)
+{
+    std::string strReply = reply(code, client->getNickname(), message);
+    send(client->getFd(), strReply.c_str(), strReply.size(), 0);
+    return;
 }

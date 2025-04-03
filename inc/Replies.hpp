@@ -1,7 +1,8 @@
-#ifndef NUMERIC_REPLIES_HPP
-#define NUMERIC_REPLIES_HPP
+#ifndef REPLIES_HPP
+#define REPLIES_HPP
 
 #include <string>
+#include "Client.hpp"
 
 // Códigos de respuesta
 #define RPL_WELCOME             001
@@ -17,11 +18,7 @@
 #define ERR_NOSUCHCHANNEL       403
 #define ERR_CANNOTSENDTOCHAN    404
 
-class NumericReplies
-{
-    public:
-        static std::string reply(int code, const std::string &nick, const std::string &msg = "");
-};
-
+std::string reply(int code, const std::string &nick, const std::string &msg = "");
+void sendReply(Client* client, int code, const std::string& message);
 
 #endif
