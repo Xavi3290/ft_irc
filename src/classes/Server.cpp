@@ -219,21 +219,22 @@ void Server::parseCommand(Client *client, const std::string &message) {
 
 	std::cout << "Command: " << message << std::endl;
     if (command != "PASS" && !client->hasProvidedPass()) {
-        std::string errorMsg = ":server 451 * :You have not registered\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+		sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
         return;
     }
 
     if (command == "PASS") {
         std::string pass;
+		if (client->isRegistered()) {
+			sendReplyTo(client, ERR_ALREADYREGISTRED, "", "You may not reregister");
+			return;
+		}
         if (!(iss >> pass)) {
-            std::string errorMsg = ":server 461 PASS :Not enough parameters\r\n";
-            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
             return;
         }
         if (pass != _password) {
-            std::string errorMsg = ":server 464 * :Password incorrect\r\n";
-            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            sendReplyTo(client, ERR_PASSWDMISMATCH, "", "Password incorrect");
             std::cout << "Client " << client->getFd() << " provided invalid password." << std::endl;
             close(client->getFd());
             removeClient(client->getFd());
