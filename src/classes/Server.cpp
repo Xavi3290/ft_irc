@@ -1,66 +1,70 @@
 /* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Server.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/13 19:15:50 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/04/02 18:27:31 by xroca-pe         ###   ########.fr       */
-/*                                                                            */
+/*                                      */
+/*                            :::     ::::::::   */
+/*   Server.cpp           :+:   :+:    :+:   */
+/*                          +:+ +:+       +:+    */
+/*   By: xroca-pe <xroca-pe@student.42barcel>      +#+  +:+       +#+    */
+/*                        +#+#+#+#+#+   +#+     */
+/*   Created: 2025/03/13 19:15:50 by xroca-pe        #+#  #+#          */
+/*   Updated: 2025/04/02 18:27:31 by xroca-pe       ###   ########.fr    */
+/*                                      */
 /* ************************************************************************** */
 
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>     // Para salida por consola
-#include <cstdlib>      // Para atoi() y EXIT_SUCCESS/EXIT_FAILURE
-#include <cstring>      // Para memset()
-#include <cerrno>       // Para manejo de errores
-#include <unistd.h>     // Para close(), read()
-#include <fcntl.h>      // Para fcntl()
+#include <iostream>  // Para salida por consola
+#include <cstdlib>    // Para atoi() y EXIT_SUCCESS/EXIT_FAILURE
+#include <cstring>    // Para memset()
+#include <cerrno>      // Para manejo de errores
+#include <unistd.h>  // Para close(), read()
+#include <fcntl.h>    // Para fcntl()
 #include <sys/types.h>
 #include <sys/socket.h> // Para socket(), bind(), listen(), accept(), setsockopt(), send(), recv()
 #include <netinet/in.h> // Para sockaddr_in y htons()
-#include <cstdio>       // Para perror()
+#include <cstdio>      // Para perror()
 #include <sstream> 
 
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {}
 
-Server::~Server() {
+Server::~Server()
+{
     if (_listenFd != -1)
         close(_listenFd);
-    for (size_t i = 1; i < _pollFds.size(); i++) {
-        close(_pollFds[i].fd);
-    }
-    for (size_t i = 0; i < _clients.size(); i++) {
-        delete _clients[i];
-    }
-    for(size_t i = 0; i < _channels.size(); i++) {
-        delete _channels[i];   
-    }
+		for (size_t i = 1; i < _pollFds.size(); i++) {
+			close(_pollFds[i].fd);
+		}
+		for (size_t i = 0; i < _clients.size(); i++) {
+			delete _clients[i];
+		}
+		for(size_t i = 0; i < _channels.size(); i++) {
+			delete _channels[i];   
+		}
 }
-
+	
 // SENDERS TYPES
+void Server::sendReplyTo(Client *client, int code, const std::string &params, const std::string &message)
+{
+	std::string reply = NumericReplies::reply(code, client->getNickname(), params, message);
+	send(client->getFd(), reply.c_str(), reply.length(), 0);
+}
 
 void Server::sendToChannel(Client *sender, const std::string &channelName, const std::string &message)
 {
     Channel *channel = getChannelByName(channelName);
     if (!channel)
     {
-        std::string errorMsg = NumericReplies::reply(ERR_NOSUCHCHANNEL, sender->getNickname(), channelName);
-        send(sender->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(sender, ERR_NOSUCHCHANNEL, channelName, "No such channel");
         return;
     }
 
     if (!channel->hasClient(sender))
     {
-        std::string errorMsg = NumericReplies::reply(ERR_CANNOTSENDTOCHAN, sender->getNickname(), channelName);
-        send(sender->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(sender, ERR_CANNOTSENDTOCHAN, channelName, "Cannot send to channel");
         return;
     }
 
-    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@host PRIVMSG " + channelName + " :" + message + "\r\n";
+    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@host PRIVMSG " + channelName + message + "\r\n";
     channel->broadcastMessage(fullMsg, sender);
 }
 
@@ -68,8 +72,7 @@ void Server::sendToUser(Client *sender, const std::string &targetNick, const std
 {
     Client *receiver = findClientByNick(targetNick);
     if (!receiver) {
-        std::string errorMsg = NumericReplies::reply(ERR_NOSUCHNICK, sender->getNickname(), targetNick);
-        send(sender->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(sender, ERR_NOSUCHNICK, targetNick, "No such nick");
         return;
     }
 
@@ -86,6 +89,7 @@ void Server::sendToAll(Client *sender, const std::string &message)
             send(target->getFd(), fullMsg.c_str(), fullMsg.size(), 0);
     }
 }
+
 Client* Server::findClientByNick(const std::string &nickname) {
     for (size_t i = 0; i < _clients.size(); ++i) {
         if (_clients[i]->getNickname() == nickname) {
@@ -116,7 +120,7 @@ bool Server::setupSocket() {
         perror("socket");
         return false;
     }
-    
+        
     // Permitir reutilizar la dirección
     int opt = 1;
     if (setsockopt(_listenFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
@@ -143,7 +147,7 @@ bool Server::setupSocket() {
         close(_listenFd);
         return false;
     }
-    
+        
     // Poner el socket a escuchar conexiones entrantes
     if (listen(_listenFd, SOMAXCONN) < 0) {
         perror("listen");
@@ -286,8 +290,9 @@ void Server::parseCommand(Client *client, const std::string &message) {
         std::string channelName;
         if (!(iss >> channelName))
         {
-            std::string errorMsg = NumericReplies::reply(ERR_NEEDMOREPARAMS, client->getNickname(), command);
-            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+            // sendReplyTo(sender, ERR_NEEDMOREPARAMS, client->getNickname(), command);
+            // send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
             return;
         }
         handleJoin(client, channelName);
@@ -601,11 +606,8 @@ void Server::parseCommand(Client *client, const std::string &message) {
 			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
 			return;
 		}
-		if (newTopic == "No topic") {
-			//std::string topicMsg = ":server 331 " + client->getNickname() + " " + channelName + " :No topic is set\r\n";
-			std::string topicMsg = NumericReplies::reply(RPL_NOTOPIC, client->getNickname(), channelName);
-			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
-		}
+		if (newTopic == "No topic")
+			sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
 		else {
 			std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + newTopic + "\r\n";
 			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
@@ -644,13 +646,11 @@ void Server::parseCommand(Client *client, const std::string &message) {
 void Server::handleJoin(Client *client, const std::string &channelName)
 {
     if (!client->isRegistered()) {
-            std::string errorMsg = NumericReplies::reply(ERR_NOTREGISTERED, client->getNickname());
-            send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
             return;
         }
 	if(channelName[0] != '#') {
-		std::string errorMsg = NumericReplies::reply(ERR_NOSUCHCHANNEL, client->getNickname(), channelName);
-		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+		sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 		return;
 	}
         Channel *channel = getChannelByName(channelName);
@@ -661,13 +661,13 @@ void Server::handleJoin(Client *client, const std::string &channelName)
         }
         if (!channel->hasClient(client))
             channel->addClient(client);
-    
+        
         std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channelName + "\r\n";
         channel->broadcastMessage(joinMsg, NULL);
         
         //SI NO HAY TOPIC
-        std::string topicMsg = NumericReplies::reply(RPL_NOTOPIC, client->getNickname(), channelName);
-        send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
+
+        //sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
 
         //LISTAR USUARIOS
         const std::vector<Client *> &clients = channel->getClients();
@@ -679,21 +679,7 @@ void Server::handleJoin(Client *client, const std::string &channelName)
         send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
 
         // 4. Fin de lista (RPL_ENDOFNAMES)
-        std::string endMsg = NumericReplies::reply(RPL_ENDOFNAMES, client->getNickname(), channelName);
-        send(client->getFd(), endMsg.c_str(), endMsg.size(), 0);
-        
-        //ANTIGUO MODIFICADO
-
-        // std::string joinMsg = "You have joined channel " + channelName + "\r\n";
-
-        //AHORA HexChat CREA LOS CANALES CORRECTAMENTE
-        // FALTA IMPLEMENTAR LISTA DE USUARIOS <---- NO SE SI ES NECESARIO
-        
-        // std::string joinMsg = ":" + client->getNickname() + "!" + client->getUsername() + "@localhost JOIN :" + channelName + "\r\n";
-        // send(client->getFd(), joinMsg.c_str(), joinMsg.size(), 0);
-        // std::string joinMsg2 = ":irc.42.localhost 332" + client->getUsername() + channelName + ":posible TOPIC si hay\r\n";
-        // send(client->getFd(), joinMsg2.c_str(), joinMsg2.size(), 0);
-        // std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
+        sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
 }
 
 void Server::handleClientData(size_t i)
