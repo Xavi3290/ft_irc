@@ -1,46 +1,38 @@
-SRC_DIR = src/
-OBJ_DIR = obj/
-INC_DIR = inc/
+# **************************************************************************** #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2025/03/13 18:55:19 by xroca-pe          #+#    #+#              #
+#    Updated: 2025/03/18 19:04:44 by xroca-pe         ###   ########.fr        #
+#                                                                              #
+# **************************************************************************** #
+
 
 NAME = ircserv
 
 CXX = c++
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 
+SRCS = src/main.cpp src/classes/Server.cpp src/classes/Client.cpp src/classes/Channel.cpp src/classes/NumericReplies.cpp
+INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp
+OBJS = $(SRCS:.cpp=.o)
 
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98
-CDEPS = -MMD -MP
-
-CALL = $(CXXFLAGS) $(CDEPS)
-
-SRCS =		src/main.cpp \
-#			src/main.cpp \
-
-OBJS = $(SRCS:$(SRC_DIR)%.cpp=$(OBJ_DIR)%.o)
-DEPS = $(OBJS:.o=.d)
-
-HEADERS = 	#inc/BitcoinExchange.hpp \
-
-
-all: $(OBJ_DIR) $(NAME)
+all: $(NAME)
 
 $(NAME): $(OBJS)
-	$(CXX) $(CALL) $(OBJS) -o $(NAME)
+	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
-
-$(OBJ_DIR)%.o: $(SRC_DIR)%.cpp Makefile
-	$(CXX) $(CALL) -I$(INC_DIR) -c $< -o $@
-
-$(OBJ_DIR):
-	mkdir -p $@
-
+%.o: %.cpp $(INCLUDES)
+	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 clean:
-	rm -rf $(OBJ_DIR)
+	rm -f $(OBJS)
 
 fclean: clean
 	rm -f $(NAME)
 
 re: fclean all
-
--include $(DEPS)
 
 .PHONY: all clean fclean re
