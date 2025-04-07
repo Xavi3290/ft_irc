@@ -15,7 +15,7 @@
 #include <sys/socket.h>
 #include <iostream>
 
-Channel::Channel(const std::string &name) : _name(name) {}
+Channel::Channel(const std::string &name) : _name(name), _topicRestricted(true){}
 
 Channel::~Channel() {
     _clients.clear();
@@ -87,7 +87,52 @@ void Channel::addOperator(Client *client)
 		_operators.push_back(client);
 }
 
+void Channel::removeOperator(Client *client)
+{
+	_operators.erase(std::remove(_operators.begin(), _operators.end(), client), _operators.end());
+}
+
 void Channel::setTopic(const std::string &topic)
 {
 	_topic = topic;
+}
+
+void Channel::setTopicRestricted(bool topicRestricted)
+{
+	_topicRestricted = topicRestricted;
+}
+
+bool Channel::isTopicRestricted() const
+{
+	return _topicRestricted;
+}
+
+void Channel::setInviteOnly(bool inviteOnly)
+{
+	_inviteOnly = inviteOnly;
+}
+
+bool Channel::isInviteOnly() const
+{
+	return _inviteOnly;
+}
+
+void Channel::setKey(const std::string &key)
+{
+	_key = key;
+}
+
+const std::string &Channel::getKey() const
+{
+	return _key;
+}
+
+void Channel::setMaxClients(int maxClients)
+{
+	_maxClients = maxClients;
+}
+
+int Channel::getMaxClients() const
+{
+	return _maxClients;
 }
