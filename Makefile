@@ -15,7 +15,20 @@ NAME = ircserv
 
 CXX = c++
 CXXFLAGS = -Wall -Wextra -Werror -std=c++98 
-SRCS = src/main.cpp src/classes/Server.cpp src/classes/Client.cpp src/classes/Channel.cpp src/classes/NumericReplies.cpp
+SRCS =  src/main.cpp \
+		src/classes/Server.cpp \
+		src/classes/Client.cpp \
+		src/classes/Channel.cpp \
+		src/classes/NumericReplies.cpp \
+		src/commands/Pass.cpp \
+		src/commands/Nick.cpp \
+		src/commands/User.cpp \
+		src/commands/Ping.cpp \
+		src/commands/Join.cpp \
+		src/commands/PrivMsg.cpp \
+		src/commands/Part.cpp \
+
+		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp
 OBJS = $(SRCS:.cpp=.o)
 

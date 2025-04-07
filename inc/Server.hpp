@@ -57,8 +57,14 @@ class Server {
         void sendToAll(Client *sender, const std::string &message);
 
         void sendReplyTo(Client *client, int code, const std::string &params = "", const std::string &message = "");
-
-        void handleJoin(Client *client, const std::string &channelName);
+        
+        void handlePass(Client *client, std::istringstream &iss);
+        void handleNick(Client *client, std::istringstream &iss);
+        void handleUser(Client *client, std::istringstream &iss);
+        void handlePing(Client *client, std::istringstream &iss);
+        void handleJoin(Client *client, std::istringstream &iss);
+        void handlePrivMsg(Client *client, std::istringstream &iss);
+        void handlePart(Client *client, std::istringstream &iss);
 };
 
 #endif

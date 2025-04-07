@@ -1,0 +1,19 @@
+# Archivos objeto compilados
+*.o
+
+# Ejecutable (en este caso, "ircserv" es el nombre del binario)
+ircserv
+
+# Archivos temporales y de respaldo
+*~
+*.swp
+*.swo
+
+# Carpetas de build si se generan
+/build/
+
+# Configuraciones de editores, por ejemplo VSCode
+.vscode/
+
+# Otros archivos generados
+.DS_Store
