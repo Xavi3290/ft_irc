@@ -15,7 +15,7 @@
 #include <sys/socket.h>
 #include <iostream>
 
-Channel::Channel(const std::string &name) : _name(name), _topicRestricted(true){}
+Channel::Channel(const std::string &name) : _name(name), _topicRestricted(true), _maxClients(0){}
 
 Channel::~Channel() {
     _clients.clear();
@@ -127,6 +127,16 @@ const std::string &Channel::getKey() const
 	return _key;
 }
 
+bool Channel::isKeySet() const
+{
+	return _keySet;
+}
+
+void Channel::setKeySet(bool keySet)
+{
+	_keySet = keySet;
+}
+
 void Channel::setMaxClients(int maxClients)
 {
 	_maxClients = maxClients;
@@ -135,4 +145,28 @@ void Channel::setMaxClients(int maxClients)
 int Channel::getMaxClients() const
 {
 	return _maxClients;
+}
+
+bool Channel::isFull() const
+{
+	if (_maxClients == 0)
+		return false;
+	return _clients.size() >= static_cast<size_t>(_maxClients);
+}
+
+std::string Channel::getMode() const
+{
+	std::string modes;
+
+	if (_topicRestricted)
+		modes += "t";
+	if (_inviteOnly)
+		modes += "i";
+	if (_keySet)
+		modes += "k";
+	if (_maxClients > 0)
+		modes += "l";
+	if (!modes.empty())
+		modes = "+" + modes;
+	return modes;
 }

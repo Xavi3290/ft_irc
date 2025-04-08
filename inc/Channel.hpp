@@ -45,9 +45,14 @@ class Channel {
 
 		void setKey(const std::string &key);
 		const std::string &getKey() const;
+		bool isKeySet() const;
+		void setKeySet(bool keySet);
 
 		void setMaxClients(int maxClients);
 		int getMaxClients() const;
+		bool isFull() const;
+
+		std::string getMode() const;
 
     private:
         std::string _name;
@@ -56,6 +61,7 @@ class Channel {
 		std::vector<Client*> _operators;
 		bool _inviteOnly;
 		bool _topicRestricted;
+		bool _keySet;
 		std::string _key;
 		int _maxClients;
 

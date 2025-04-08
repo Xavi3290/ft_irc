@@ -58,7 +58,7 @@ class Server {
 
         void sendReplyTo(Client *client, int code, const std::string &params = "", const std::string &message = "");
 
-        void handleJoin(Client *client, const std::string &channelName);
+        void handleJoin(Client *client, const std::string &channelName, const std::string &key);
 };
 
 #endif
