@@ -66,6 +66,12 @@ class Server {
         void handlePrivMsg(Client *client, std::istringstream &iss);
         void handlePart(Client *client, std::istringstream &iss);
         void handleFile(Client *client, std::istringstream &iss);
+        void handleList(Client *client);
+        void handleNames(Client *client, std::istringstream &iss);
+        void handleKick(Client *client, std::istringstream &iss);
+        void handleTopic(Client *client, std::istringstream &iss);
+        void handleQuit(Client *client, std::istringstream &iss);
+
 
 };
 

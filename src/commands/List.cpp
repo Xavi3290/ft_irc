@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream> 
 
-void Server::handleList(Client *client, std::istringstream &iss)
+void Server::handleList(Client *client)
 {
     if (!client->isRegistered()) {
         std::string errorMsg = ":server 451 * :You have not registered\r\n";

@@ -2,6 +2,7 @@
 #include "../../inc/NumericReplies.hpp"
 
 #include <iostream>  // Para salida por consola
+#include <unistd.h>  // Para close(), read()
 #include <string>
 #include <sstream> 
 

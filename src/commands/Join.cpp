@@ -1,6 +1,4 @@
 #include "../../inc/Server.hpp"
-// #include "../../inc/Client.hpp"
-// #include "../../inc/Channel.hpp"
 #include "../../inc/NumericReplies.hpp"
 
 #include <iostream>  // Para salida por consola

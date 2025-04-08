@@ -1,15 +1,3 @@
-/* ************************************************************************** */
-/*                                      */
-/*                            :::     ::::::::   */
-/*   Server.cpp           :+:   :+:    :+:   */
-/*                          +:+ +:+       +:+    */
-/*   By: xroca-pe <xroca-pe@student.42barcel>      +#+  +:+       +#+    */
-/*                        +#+#+#+#+#+   +#+     */
-/*   Created: 2025/03/13 19:15:50 by xroca-pe        #+#  #+#          */
-/*   Updated: 2025/04/02 18:27:31 by xroca-pe       ###   ########.fr    */
-/*                                      */
-/* ************************************************************************** */
-
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
@@ -240,7 +228,7 @@ void Server::parseCommand(Client *client, const std::string &message) {
     else if (command == "FILE")
         handleFile(client, iss);
 	else if (command == "LIST")
-        handleList(client, iss);
+        handleList(client);
 	else if (command == "NAMES")
         handleNames(client, iss);
 	else if (command == "KICK")
@@ -264,7 +252,6 @@ void Server::handleClientData(size_t i)
         int bytes_read = recv(_pollFds[i].fd, buffer, sizeof(buffer), 0);
         if (bytes_read > 0)
         {
-            //buffer[bytes_read] = '\0';
             std::string message(buffer, bytes_read);
             Client *client = findClientByFd(_pollFds[i].fd);
             if (client)

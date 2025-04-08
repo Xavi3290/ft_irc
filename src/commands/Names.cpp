@@ -5,7 +5,7 @@
 #include <string>
 #include <sstream> 
 
-void Server::handleFile(Client *client, std::istringstream &iss)
+void Server::handleNames(Client *client, std::istringstream &iss)
 {
     std::string target;
     if (!(iss >> target)) {
