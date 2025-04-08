@@ -65,6 +65,8 @@ class Server {
         void handleJoin(Client *client, std::istringstream &iss);
         void handlePrivMsg(Client *client, std::istringstream &iss);
         void handlePart(Client *client, std::istringstream &iss);
+        void handleFile(Client *client, std::istringstream &iss);
+
 };
 
 #endif

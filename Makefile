@@ -27,6 +27,12 @@ SRCS =  src/main.cpp \
 		src/commands/Join.cpp \
 		src/commands/PrivMsg.cpp \
 		src/commands/Part.cpp \
+		src/commands/File.cpp \
+		src/commands/List.cpp \
+		src/commands/Names.cpp \
+		src/commands/Kick.cpp \
+		src/commands/Topic.cpp \
+		src/commands/Quit.cpp \
 
 		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp
