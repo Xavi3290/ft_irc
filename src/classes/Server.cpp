@@ -639,7 +639,11 @@ void Server::parseCommand(Client *client, const std::string &message) {
 		const std::vector<Client *> &clients = channel->getClients();
 		for (size_t i = 0; i < clients.size(); i++) {
 			Client *target = clients[i];
-			std::string status = "H";
+			std::string status;
+			if (clients[i]->isAway())
+				status = "G";
+			else
+				status = "H";
 			if (channel->isOperator(clients[i]))
 				status += "@";
 			std::string whoReply = ":server 352 " + client->getNickname() + " " +
@@ -817,6 +821,22 @@ void Server::parseCommand(Client *client, const std::string &message) {
 				_pollFds.erase(_pollFds.begin() + i);
 				break;
 			}
+		}
+	}
+	else if (command == "AWAY") {
+		std::string awayMsg;
+		getline(iss, awayMsg);
+		if (awayMsg.empty()) {
+			client->setAway(false);
+			std::string reply = ":server 305 " + client->getNickname() + " :You are no longer marked as being away\r\n";
+			send(client->getFd(), reply.c_str(), reply.size(), 0);
+			std::cout << "Client " << client->getFd() << " is no longer away" << std::endl;
+		} else {
+			client->setAway(true);
+			client->setAwayMessage(awayMsg);
+			std::string reply = ":server 306 " + client->getNickname() + " :You have been marked as being away\r\n";
+			send(client->getFd(), reply.c_str(), reply.size(), 0);
+			std::cout << "Client " << client->getFd() << " is now away: " << awayMsg << std::endl;
 		}
 	}
     else {
