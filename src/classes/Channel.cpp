@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <sys/socket.h>
 #include <iostream>
+#include <sstream>
 
 Channel::Channel(const std::string &name) : _name(name), _topicRestricted(true), _maxClients(0){}
 
@@ -154,19 +155,48 @@ bool Channel::isFull() const
 	return _clients.size() >= static_cast<size_t>(_maxClients);
 }
 
-std::string Channel::getMode() const
+std::string Channel::getMode(Channel *cha, Client *client) const
 {
 	std::string modes;
 
-	if (_topicRestricted)
-		modes += "t";
 	if (_inviteOnly)
 		modes += "i";
 	if (_keySet)
 		modes += "k";
+	if (_topicRestricted)
+		modes += "t";
 	if (_maxClients > 0)
 		modes += "l";
 	if (!modes.empty())
 		modes = "+" + modes;
+	if (_maxClients > 0) {
+		std::stringstream ss;
+		ss << cha->getMaxClients();
+		std::string maxClientsStr = ss.str();
+		modes += " " + maxClientsStr;
+	}
+	if (_keySet && cha->isOperator(client))
+		modes += " " + _key;
 	return modes;
+}
+
+void Channel::addInvited(Client *client)
+{
+	if (!isInvited(client))
+		_invited.push_back(client);
+}
+
+void Channel::removeInvited(Client *client)
+{
+	_invited.erase(std::remove(_invited.begin(), _invited.end(), client), _invited.end());
+}
+
+bool Channel::isInvited(Client *client) const
+{
+	for (size_t i = 0; i < _invited.size(); i++)
+	{
+		if (_invited[i] == client)
+			return true;
+	}
+	return false;
 }

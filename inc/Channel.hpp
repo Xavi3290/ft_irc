@@ -52,13 +52,18 @@ class Channel {
 		int getMaxClients() const;
 		bool isFull() const;
 
-		std::string getMode() const;
+		std::string getMode(Channel *cha, Client *client) const;
+
+		void addInvited(Client *client);
+		void removeInvited(Client *client);
+		bool isInvited(Client *client) const;
 
     private:
         std::string _name;
 		std::string _topic;
         std::vector<Client*> _clients;
 		std::vector<Client*> _operators;
+		std::vector<Client*> _invited;
 		bool _inviteOnly;
 		bool _topicRestricted;
 		bool _keySet;
