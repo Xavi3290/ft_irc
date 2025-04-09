@@ -248,11 +248,354 @@ void Server::parseCommand(Client *client, const std::string &message) {
         handleTopic(client, iss);
 	else if (command == "QUIT")
         handleQuit(client, iss);
+    else if (command == "JOIN") {
+        std::string channelName, key;
+        if (!(iss >> channelName))
+        {
+            // sendReplyTo(sender, ERR_NEEDMOREPARAMS, client->getNickname(), command);
+            // send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+            return;
+        }
+		iss >> key;
+        handleJoin(client, channelName, key);
+    }
+    
+	else if (command == "NAMES") {
+		std::string target;
+		if (!(iss >> target)) {
+			std::string errorMsg = ":server 461 NAMES :Not enough parameters\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
+		Channel *channel = getChannelByName(target);
+		if (channel) {
+			const std::vector<Client *> &clients = channel->getClients();
+			std::string nameList;
+			for (size_t i = 0; i < clients.size(); i++){
+				if (channel->isOperator(clients[i]))
+					nameList += "@";
+				nameList += clients[i]->getNickname() + " ";
+			}
+			std::string namesReply = ":server 353 " + client->getNickname() + " = " + target + " :" + nameList + "\r\n";
+			send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+			std::string endMsg = ":server 366 " + client->getNickname() + " " + target + " :End of /NAMES list\r\n";
+			send(client->getFd(), endMsg.c_str(), endMsg.size(), 0);
+		}
+		else {
+			std::string errorMsg = ":server 402 " + target + " :No such nick/channel\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+		}
+	}
+	
+	else if (command == "TOPIC") {
+		std::string channelName, newTopic;
+		if (!(iss >> channelName)) {
+			std::string errorMsg = ":server 461 TOPIC :Not enough parameters\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
+		std::getline(iss, newTopic);
+		if(!newTopic.empty() && newTopic[0] == ' ')
+			newTopic = newTopic.substr(1);
+		else
+			newTopic = "No topic";
+		Channel *channel = getChannelByName(channelName);
+		if (!channel) {
+			std::string errorMsg = ":server 403 " + channelName + " :No such nick/channel\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
+		if (!channel->isOperator(client) && channel->isTopicRestricted()) {
+			std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
+		if (!channel->hasClient(client)) {
+			std::string errorMsg = ":server 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+			return;
+		}
+		if (newTopic == "No topic")
+			sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
+		else {
+			std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + newTopic + "\r\n";
+			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
+		}
+		std::string broadcast = ":" + client->getNickname() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+		channel->setTopic(newTopic);
+		channel->broadcastMessage(broadcast, client);
+	}
+	else if (command == "WHO") {
+		std::string channelname;
+		if (!(iss >> channelname)) {
+			sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+			return;
+		}
+		Channel *channel = getChannelByName(channelname);
+		if (!channel) {
+			sendReplyTo(client, ERR_NOSUCHCHANNEL, channelname, "No such channel");
+			return;
+		}
+		if (!channel->hasClient(client)) {
+			sendReplyTo(client, ERR_NOTONCHANNEL, channelname, "You're not on that channel");
+			return;
+		}
+		const std::vector<Client *> &clients = channel->getClients();
+		for (size_t i = 0; i < clients.size(); i++) {
+			Client *target = clients[i];
+			std::string status;
+			if (clients[i]->isAway())
+				status = "G";
+			else
+				status = "H";
+			if (channel->isOperator(clients[i]))
+				status += "@";
+			std::string whoReply = ":server 352 " + client->getNickname() + " " +
+			channelname + " " + target->getUsername() + " host server " +
+			target->getNickname() + " " + status + " :0 " + target->getUsername() + "\r\n";
+			send(client->getFd(), whoReply.c_str(), whoReply.size(), 0);
+		}
+		std::string endMsg = ":server 315 " + client->getNickname() + " " + channelname + " :End of /WHO list\r\n";
+		send(client->getFd(), endMsg.c_str(), endMsg.size(), 0);
+	}
+	else if (command == "MODE") {
+		std::string channelName, mode;
+		if (!(iss >> channelName)) {
+			sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+			return;
+		}
+		Channel *channel = getChannelByName(channelName);
+		if (!channel) {
+			sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+			return;
+		}
+		if (!(iss >> mode)) {
+			std::string modes = channel->getMode(channel, client);
+
+			std::string modeMsg = ":server 324 " + client->getNickname() + " " + channelName + " :" + modes +"\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
+			return;
+		}
+		if (!channel->isOperator(client)) {
+			sendReplyTo(client, ERR_CHANOPRIVSNEEDED, channelName, "You're not channel operator");
+			return;
+		}
+		if (mode == "-t") {
+			channel->setTopicRestricted(false);
+			std::string modeMsg = ":server MODE " + channelName + " -t\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		} 
+		else if (mode == "+t") {
+			channel->setTopicRestricted(true);
+			std::string modeMsg = ":server MODE " + channelName + " +t\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if (mode == "-i") {
+			channel->setInviteOnly(false);
+			std::string modeMsg = ":server MODE " + channelName + " -i\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if (mode == "+i") {
+			channel->setInviteOnly(true);
+			std::string modeMsg = ":server MODE " + channelName + " +i\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if (mode == "+k") {
+			std::string key;
+			if (!(iss >> key)) {
+				sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+				return;
+			}
+			channel->setKeySet(true);
+			channel->setKey(key);
+			std::string modeMsg = ":server MODE " + channelName + " +k " + key + "\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if (mode == "-k") {
+			channel->setKey("");
+			std::string modeMsg = ":server MODE " + channelName + " -k\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if(mode == "+o") {
+			std::string targetNick;
+			if (!(iss >> targetNick)) {
+				sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+				return;
+			}
+			Client *target = findClientByNick(targetNick);
+			if (!target) {
+				sendReplyTo(client, ERR_NOSUCHNICK, targetNick, "No such nick");
+				return;
+			}
+			if (!channel->hasClient(target)) {
+				sendReplyTo(client, ERR_NOTONCHANNEL, channelName, "You're not on that channel");
+				return;
+			}
+			channel->addOperator(target);
+			std::string modeMsg = ":server MODE " + channelName + " +o " + targetNick + "\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if(mode == "-o") {
+			std::string targetNick;
+			if (!(iss >> targetNick)) {
+				sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+				return;
+			}
+			Client *target = findClientByNick(targetNick);
+			if (!target) {
+				sendReplyTo(client, ERR_NOSUCHNICK, targetNick, "No such nick");
+				return;
+			}
+			if (!channel->hasClient(target)) {
+				sendReplyTo(client, ERR_NOTONCHANNEL, channelName, "You're not on that channel");
+				return;
+			}
+			channel->removeOperator(target);
+			std::string modeMsg = ":server MODE " + channelName + " -o " + targetNick + "\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if (mode == "+l") {
+			int limit;
+			if (!(iss >> limit)) {
+				sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+				return;
+			}
+			std::stringstream ss;
+			ss << limit;
+			std::string limitStr = ss.str();
+			channel->setMaxClients(limit);
+			std::string modeMsg = ":server MODE " + channelName + " +l " + limitStr + "\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else if (mode == "-l") {
+			channel->setMaxClients(0);
+			std::string modeMsg = ":server MODE " + channelName + " -l\r\n";
+			channel->broadcastMessage(modeMsg, client);
+		}
+		else
+			sendReplyTo(client, ERR_UNKNOWNMODE, mode, "Unknown mode");
+	}
+	else if (command == "INVITE") {
+		std::string targetNick, channelName;
+		if (!(iss >> targetNick >> channelName)) {
+			sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+			return;
+		}
+		Client *target = findClientByNick(targetNick);
+		if (!target) {
+			sendReplyTo(client, ERR_NOSUCHNICK, targetNick, "No such nick");
+			return;
+		}
+		Channel *channel = getChannelByName(channelName);
+		if (!channel) {
+			sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+			return;
+		}
+		if (!channel->isInviteOnly()) {
+			sendReplyTo(client, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
+			return;
+		}
+		if (channel->isInvited(target)) {
+			sendReplyTo(client, ERR_USERONCHANNEL, targetNick + " " + channelName, "User is already on the channel");
+			return;
+		}
+		channel->addInvited(target);
+		std::string reply341 = ":server 341 " + client->getNickname() + " " + targetNick + " " + channelName + "\r\n";
+		send(client->getFd(), reply341.c_str(), reply341.size(), 0);
+		std::string inviteMsg = ":" + client->getPrefix() + " INVITE " + targetNick + " :" + channelName + "\r\n";
+		send(target->getFd(), inviteMsg.c_str(), inviteMsg.size(), 0);
+
+		std::cout << "Client " << client->getFd() << " invited user " << target->getFd() << " to channel " << channelName << std::endl;
+	}
+	else if (command == "AWAY") {
+		std::string awayMsg;
+		getline(iss, awayMsg);
+		if (awayMsg.empty()) {
+			client->setAway(false);
+			std::string reply = ":server 305 " + client->getNickname() + " :You are no longer marked as being away\r\n";
+			send(client->getFd(), reply.c_str(), reply.size(), 0);
+			std::cout << "Client " << client->getFd() << " is no longer away" << std::endl;
+		} else {
+			client->setAway(true);
+			client->setAwayMessage(awayMsg);
+			std::string reply = ":server 306 " + client->getNickname() + " :You have been marked as being away\r\n";
+			send(client->getFd(), reply.c_str(), reply.size(), 0);
+			std::cout << "Client " << client->getFd() << " is now away: " << awayMsg << std::endl;
+		}
+	}
     else {
         std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         std::cout << "Unknown command from client " << client->getFd() << ": " << message;
     }
+}
+
+void Server::handleJoin(Client *client, const std::string &channelName, const std::string &key)
+{
+    if (!client->isRegistered()) {
+			sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
+            return;
+        }
+	if(channelName[0] != '#') {
+		sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+		return;
+	}
+        Channel *channel = getChannelByName(channelName);
+        if (!channel) {
+            channel = new Channel(channelName);
+            _channels.push_back(channel);
+			channel->addOperator(client);
+        }
+        if (!channel->hasClient(client)) {
+			if (channel->isInviteOnly() && !channel->isInvited(client)) {
+				sendReplyTo(client, ERR_INVITEONLYCHAN, channelName, "Cannot join channel (+i)");
+				return;
+			}
+			if (channel->isFull()) {
+				sendReplyTo(client, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
+				return;
+			}
+			if (channel->isKeySet() && channel->getKey() != key) {
+				sendReplyTo(client, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+				return;
+			}
+			channel->addClient(client);
+		}
+
+        std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channelName + "\r\n";
+        channel->broadcastMessage(joinMsg, NULL);
+        
+        //SI NO HAY TOPIC
+
+        //sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
+
+        //LISTAR USUARIOS
+        
+		// const std::vector<Client *> &clients = channel->getClients();
+        // std::string nameList;
+        // for (size_t i = 0; i < clients.size(); ++i)
+        //     nameList += clients[i]->getNickname() + " ";
+
+        // std::string namesReply = ":irc.42.localhost 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+        // send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+
+        // // 4. Fin de lista (RPL_ENDOFNAMES)
+        // sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+
+		if (channel) {
+			const std::vector<Client *> &clients = channel->getClients();
+			std::string nameList;
+			for (size_t i = 0; i < clients.size(); i++){
+				if (channel->isOperator(clients[i]))
+					nameList += "@";
+				nameList += clients[i]->getNickname() + " ";
+			}
+			std::string namesReply = ":server 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+			send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+			sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+		}
+	std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
 }
 
 void Server::handleClientData(size_t i)

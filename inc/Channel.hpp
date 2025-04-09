@@ -33,13 +33,43 @@ class Channel {
 		bool isOperator(Client *client) const;
 		std::string getTopic() const;
 		void addOperator(Client *client);
+		void removeOperator(Client *client);
+		
 		void setTopic(const std::string &topic);
+		
+		void setTopicRestricted(bool topicRestricted);
+		bool isTopicRestricted() const;
+		
+		void setInviteOnly(bool inviteOnly);
+		bool isInviteOnly() const;
+
+		void setKey(const std::string &key);
+		const std::string &getKey() const;
+		bool isKeySet() const;
+		void setKeySet(bool keySet);
+
+		void setMaxClients(int maxClients);
+		int getMaxClients() const;
+		bool isFull() const;
+
+		std::string getMode(Channel *cha, Client *client) const;
+
+		void addInvited(Client *client);
+		void removeInvited(Client *client);
+		bool isInvited(Client *client) const;
 
     private:
         std::string _name;
 		std::string _topic;
         std::vector<Client*> _clients;
 		std::vector<Client*> _operators;
+		std::vector<Client*> _invited;
+		bool _inviteOnly;
+		bool _topicRestricted;
+		bool _keySet;
+		std::string _key;
+		int _maxClients;
+
 };
 
 #endif

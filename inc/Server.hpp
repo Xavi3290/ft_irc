@@ -73,6 +73,8 @@ class Server {
         void handleQuit(Client *client, std::istringstream &iss);
 
 
+
+        void handleJoin(Client *client, const std::string &channelName, const std::string &key);
 };
 
 #endif
