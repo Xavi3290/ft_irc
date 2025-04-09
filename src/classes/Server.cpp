@@ -190,6 +190,17 @@ Client *Server::findClientByFd(int fd) {
 }
 
 void Server::removeClient(int fd) {
+    // for (std::vector<pollfd>::iterator it = _pollFds.begin(); it != _pollFds.end(); ++it)
+    // {
+    //     if (it->fd == fd)
+    //     {
+    //         _pollFds.erase(it);
+    //         break;
+    //     }
+    // }
+
+    // delete _clients[it];
+    // _clients.erase(fd);
     for (size_t i = 0; i < _clients.size(); i++) {
         if (_clients[i]->getFd() == fd) {
             delete _clients[i];
