@@ -74,7 +74,7 @@ class Server {
 
 
 
-        void handleJoin(Client *client, const std::string &channelName, const std::string &key);
+        // void handleJoin(Client *client, const std::string &channelName, const std::string &key);
 };
 
 #endif

@@ -248,84 +248,83 @@ void Server::parseCommand(Client *client, const std::string &message) {
         handleTopic(client, iss);
 	else if (command == "QUIT")
         handleQuit(client, iss);
-    else if (command == "JOIN") {
-        std::string channelName, key;
-        if (!(iss >> channelName))
-        {
-            // sendReplyTo(sender, ERR_NEEDMOREPARAMS, client->getNickname(), command);
-            // send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
-            return;
-        }
-		iss >> key;
-        handleJoin(client, channelName, key);
-    }
-    
-	else if (command == "NAMES") {
-		std::string target;
-		if (!(iss >> target)) {
-			std::string errorMsg = ":server 461 NAMES :Not enough parameters\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			return;
-		}
-		Channel *channel = getChannelByName(target);
-		if (channel) {
-			const std::vector<Client *> &clients = channel->getClients();
-			std::string nameList;
-			for (size_t i = 0; i < clients.size(); i++){
-				if (channel->isOperator(clients[i]))
-					nameList += "@";
-				nameList += clients[i]->getNickname() + " ";
-			}
-			std::string namesReply = ":server 353 " + client->getNickname() + " = " + target + " :" + nameList + "\r\n";
-			send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
-			std::string endMsg = ":server 366 " + client->getNickname() + " " + target + " :End of /NAMES list\r\n";
-			send(client->getFd(), endMsg.c_str(), endMsg.size(), 0);
-		}
-		else {
-			std::string errorMsg = ":server 402 " + target + " :No such nick/channel\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-		}
-	}
+    // else if (command == "JOIN") {
+    //     std::string channelName, key;
+    //     if (!(iss >> channelName))
+    //     {
+    //         // sendReplyTo(sender, ERR_NEEDMOREPARAMS, client->getNickname(), command);
+    //         // send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 		sendReplyTo(client, ERR_NEEDMOREPARAMS, command, "Not enough parameters");
+    //         return;
+    //     }
+	// 	iss >> key;
+    //     handleJoin(client, channelName, key);
+    // }
+	// else if (command == "NAMES") {
+	// 	std::string target;
+	// 	if (!(iss >> target)) {
+	// 		std::string errorMsg = ":server 461 NAMES :Not enough parameters\r\n";
+	// 		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 		return;
+	// 	}
+	// 	Channel *channel = getChannelByName(target);
+	// 	if (channel) {
+	// 		const std::vector<Client *> &clients = channel->getClients();
+	// 		std::string nameList;
+	// 		for (size_t i = 0; i < clients.size(); i++){
+	// 			if (channel->isOperator(clients[i]))
+	// 				nameList += "@";
+	// 			nameList += clients[i]->getNickname() + " ";
+	// 		}
+	// 		std::string namesReply = ":server 353 " + client->getNickname() + " = " + target + " :" + nameList + "\r\n";
+	// 		send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+	// 		std::string endMsg = ":server 366 " + client->getNickname() + " " + target + " :End of /NAMES list\r\n";
+	// 		send(client->getFd(), endMsg.c_str(), endMsg.size(), 0);
+	// 	}
+	// 	else {
+	// 		std::string errorMsg = ":server 402 " + target + " :No such nick/channel\r\n";
+	// 		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 	}
+	// }
 	
-	else if (command == "TOPIC") {
-		std::string channelName, newTopic;
-		if (!(iss >> channelName)) {
-			std::string errorMsg = ":server 461 TOPIC :Not enough parameters\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			return;
-		}
-		std::getline(iss, newTopic);
-		if(!newTopic.empty() && newTopic[0] == ' ')
-			newTopic = newTopic.substr(1);
-		else
-			newTopic = "No topic";
-		Channel *channel = getChannelByName(channelName);
-		if (!channel) {
-			std::string errorMsg = ":server 403 " + channelName + " :No such nick/channel\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			return;
-		}
-		if (!channel->isOperator(client) && channel->isTopicRestricted()) {
-			std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			return;
-		}
-		if (!channel->hasClient(client)) {
-			std::string errorMsg = ":server 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n";
-			send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-			return;
-		}
-		if (newTopic == "No topic")
-			sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
-		else {
-			std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + newTopic + "\r\n";
-			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
-		}
-		std::string broadcast = ":" + client->getNickname() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
-		channel->setTopic(newTopic);
-		channel->broadcastMessage(broadcast, client);
-	}
+	// else if (command == "TOPIC") {
+	// 	std::string channelName, newTopic;
+	// 	if (!(iss >> channelName)) {
+	// 		std::string errorMsg = ":server 461 TOPIC :Not enough parameters\r\n";
+	// 		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 		return;
+	// 	}
+	// 	std::getline(iss, newTopic);
+	// 	if(!newTopic.empty() && newTopic[0] == ' ')
+	// 		newTopic = newTopic.substr(1);
+	// 	else
+	// 		newTopic = "No topic";
+	// 	Channel *channel = getChannelByName(channelName);
+	// 	if (!channel) {
+	// 		std::string errorMsg = ":server 403 " + channelName + " :No such nick/channel\r\n";
+	// 		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 		return;
+	// 	}
+	// 	if (!channel->isOperator(client) && channel->isTopicRestricted()) {
+	// 		std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+	// 		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 		return;
+	// 	}
+	// 	if (!channel->hasClient(client)) {
+	// 		std::string errorMsg = ":server 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+	// 		send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+	// 		return;
+	// 	}
+	// 	if (newTopic == "No topic")
+	// 		sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
+	// 	else {
+	// 		std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + newTopic + "\r\n";
+	// 		send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
+	// 	}
+	// 	std::string broadcast = ":" + client->getNickname() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+	// 	channel->setTopic(newTopic);
+	// 	channel->broadcastMessage(broadcast, client);
+	// }
 	else if (command == "WHO") {
 		std::string channelname;
 		if (!(iss >> channelname)) {
@@ -531,72 +530,72 @@ void Server::parseCommand(Client *client, const std::string &message) {
     }
 }
 
-void Server::handleJoin(Client *client, const std::string &channelName, const std::string &key)
-{
-    if (!client->isRegistered()) {
-			sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
-            return;
-        }
-	if(channelName[0] != '#') {
-		sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
-		return;
-	}
-        Channel *channel = getChannelByName(channelName);
-        if (!channel) {
-            channel = new Channel(channelName);
-            _channels.push_back(channel);
-			channel->addOperator(client);
-        }
-        if (!channel->hasClient(client)) {
-			if (channel->isInviteOnly() && !channel->isInvited(client)) {
-				sendReplyTo(client, ERR_INVITEONLYCHAN, channelName, "Cannot join channel (+i)");
-				return;
-			}
-			if (channel->isFull()) {
-				sendReplyTo(client, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
-				return;
-			}
-			if (channel->isKeySet() && channel->getKey() != key) {
-				sendReplyTo(client, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
-				return;
-			}
-			channel->addClient(client);
-		}
+// void Server::handleJoin(Client *client, const std::string &channelName, const std::string &key)
+// {
+//     if (!client->isRegistered()) {
+// 			sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
+//             return;
+//         }
+// 	if(channelName[0] != '#') {
+// 		sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+// 		return;
+// 	}
+//         Channel *channel = getChannelByName(channelName);
+//         if (!channel) {
+//             channel = new Channel(channelName);
+//             _channels.push_back(channel);
+// 			channel->addOperator(client);
+//         }
+//         if (!channel->hasClient(client)) {
+// 			if (channel->isInviteOnly() && !channel->isInvited(client)) {
+// 				sendReplyTo(client, ERR_INVITEONLYCHAN, channelName, "Cannot join channel (+i)");
+// 				return;
+// 			}
+// 			if (channel->isFull()) {
+// 				sendReplyTo(client, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
+// 				return;
+// 			}
+// 			if (channel->isKeySet() && channel->getKey() != key) {
+// 				sendReplyTo(client, ERR_BADCHANNELKEY, channelName, "Cannot join channel (+k)");
+// 				return;
+// 			}
+// 			channel->addClient(client);
+// 		}
 
-        std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channelName + "\r\n";
-        channel->broadcastMessage(joinMsg, NULL);
+//         std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channelName + "\r\n";
+//         channel->broadcastMessage(joinMsg, NULL);
         
-        //SI NO HAY TOPIC
+//         //SI NO HAY TOPIC
 
-        //sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
+//         //sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
 
-        //LISTAR USUARIOS
+//         //LISTAR USUARIOS
         
-		// const std::vector<Client *> &clients = channel->getClients();
-        // std::string nameList;
-        // for (size_t i = 0; i < clients.size(); ++i)
-        //     nameList += clients[i]->getNickname() + " ";
+// 		// const std::vector<Client *> &clients = channel->getClients();
+//         // std::string nameList;
+//         // for (size_t i = 0; i < clients.size(); ++i)
+//         //     nameList += clients[i]->getNickname() + " ";
 
-        // std::string namesReply = ":irc.42.localhost 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
-        // send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+//         // std::string namesReply = ":irc.42.localhost 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+//         // send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
 
-        // // 4. Fin de lista (RPL_ENDOFNAMES)
-        // sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+//         // // 4. Fin de lista (RPL_ENDOFNAMES)
+//         // sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
 
-		if (channel) {
-			const std::vector<Client *> &clients = channel->getClients();
-			std::string nameList;
-			for (size_t i = 0; i < clients.size(); i++){
-				if (channel->isOperator(clients[i]))
-					nameList += "@";
-				nameList += clients[i]->getNickname() + " ";
-			}
-			std::string namesReply = ":server 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
-			send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
-			sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
-		}
-	std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
-}
+// 		if (channel) {
+// 			const std::vector<Client *> &clients = channel->getClients();
+// 			std::string nameList;
+// 			for (size_t i = 0; i < clients.size(); i++){
+// 				if (channel->isOperator(clients[i]))
+// 					nameList += "@";
+// 				nameList += clients[i]->getNickname() + " ";
+// 			}
+// 			std::string namesReply = ":server 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
+// 			send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
+// 			sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
+// 		}
+// 	std::cout << "Client " << client->getFd() << " joined channel " << channelName << std::endl;
+// }
 
 void Server::handleClientData(size_t i)
 {

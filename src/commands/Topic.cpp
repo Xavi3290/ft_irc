@@ -24,7 +24,7 @@ void Server::handleTopic(Client *client, std::istringstream &iss)
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
-    if (!channel->isOperator(client)) {
+    if (!channel->isOperator(client) && channel->isTopicRestricted()) {
         std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
