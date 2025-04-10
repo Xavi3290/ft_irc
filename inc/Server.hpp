@@ -57,8 +57,24 @@ class Server {
         void sendToAll(Client *sender, const std::string &message);
 
         void sendReplyTo(Client *client, int code, const std::string &params = "", const std::string &message = "");
+        
+        void handlePass(Client *client, std::istringstream &iss);
+        void handleNick(Client *client, std::istringstream &iss);
+        void handleUser(Client *client, std::istringstream &iss);
+        void handlePing(Client *client, std::istringstream &iss);
+        void handleJoin(Client *client, std::istringstream &iss);
+        void handlePrivMsg(Client *client, std::istringstream &iss);
+        void handlePart(Client *client, std::istringstream &iss);
+        void handleFile(Client *client, std::istringstream &iss);
+        void handleList(Client *client);
+        void handleNames(Client *client, std::istringstream &iss);
+        void handleKick(Client *client, std::istringstream &iss);
+        void handleTopic(Client *client, std::istringstream &iss);
+        void handleQuit(Client *client, std::istringstream &iss);
 
-        void handleJoin(Client *client, const std::string &channelName, const std::string &key);
+
+
+        // void handleJoin(Client *client, const std::string &channelName, const std::string &key);
 };
 
 #endif
