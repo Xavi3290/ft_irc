@@ -11,6 +11,7 @@
 /* ************************************************************************** */
 
 #include "../../inc/Client.hpp"
+#include <iterator>
 
 Client::Client(int fd)
     : _fd(fd), _nickname(""), _username(""), _registered(false), _passProvided(false) {}
@@ -31,6 +32,17 @@ void Client::setNickname(const std::string &nick) {
 
 const std::string& Client::getUsername() const {
     return _username;
+}
+
+const std::vector<std::string> &Client::getChannels() const {
+    
+    std::vector<std::string> channelNames;
+
+    for(std::vector<Channels*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
+        channelNames.push_back(it.getName());
+    }
+
+    return channelNames;
 }
 
 void Client::setUsername(const std::string &username) {

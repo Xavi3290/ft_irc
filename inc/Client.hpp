@@ -14,6 +14,8 @@
 #define CLIENT_HPP
 
 #include <string>
+#include <vector>
+#include "Channel.hpp"
 
 class Client {
     public:
@@ -29,6 +31,7 @@ class Client {
         void setRegistered(bool registered);
         bool hasProvidedPass() const;
         void setPassProvided(bool provided);
+        const std::vector<string> &getChannels() const;
 
         std::string getPrefix() const;
 
@@ -39,6 +42,7 @@ class Client {
         std::string _username;
         bool _registered;
         bool _passProvided;
+        std::vector<Channel*> _channels;
 };
 
 #endif

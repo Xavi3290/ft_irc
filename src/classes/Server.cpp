@@ -12,6 +12,7 @@
 #include <netinet/in.h> // Para sockaddr_in y htons()
 #include <cstdio>      // Para perror()
 #include <sstream> 
+#include <set>
 
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {}
 
@@ -76,6 +77,14 @@ void Server::sendToAll(Client *sender, const std::string &message)
         if (target != sender)
             send(target->getFd(), fullMsg.c_str(), fullMsg.size(), 0);
     }
+}
+
+void Server::sendToSharedChanels(Client *sender, const std::string &message)
+{
+	std::set<Client*> notified;
+
+	const std::vector<std::string> 7channels = sender.get
+
 }
 
 Client* Server::findClientByNick(const std::string &nickname) {

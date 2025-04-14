@@ -61,9 +61,9 @@ void Server::handleNick(Client *client, std::istringstream &iss)
         return;
     }
 
-    // if (client->isRegistered()){
-    //     client->
-    // }
+    if (client->isRegistered()){
+        client->
+    }
     client->setNickname(nickName);
     std::cout << "Client " << client->getFd() << " set nickname to " << nickName << std::endl;
     if (!client->getNickname().empty() && !client->getUsername().empty() && client->hasProvidedPass() && !client->isRegistered()) {
