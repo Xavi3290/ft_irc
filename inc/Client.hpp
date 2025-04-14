@@ -31,6 +31,10 @@ class Client {
         void setRegistered(bool registered);
         bool hasProvidedPass() const;
         void setPassProvided(bool provided);
+		bool isAway() const;
+		void setAway(bool away);
+		void setAwayMessage(const std::string &message);
+		const std::string &getAwayMessage() const;
         const std::vector<string> &getChannels() const;
 
         std::string getPrefix() const;
@@ -42,6 +46,8 @@ class Client {
         std::string _username;
         bool _registered;
         bool _passProvided;
+		bool _isAway;
+		std::string _awayMessage;
         std::vector<Channel*> _channels;
 };
 

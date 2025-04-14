@@ -20,6 +20,9 @@ SRCS =  src/main.cpp \
 		src/commands/Kick.cpp \
 		src/commands/Topic.cpp \
 		src/commands/Quit.cpp \
+		src/commands/Who.cpp \
+		src/commands/Mode.cpp \
+		src/commands/Invite.cpp \
 
 		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp

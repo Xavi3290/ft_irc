@@ -257,12 +257,35 @@ void Server::parseCommand(Client *client, const std::string &message) {
         handleTopic(client, iss);
 	else if (command == "QUIT")
         handleQuit(client, iss);
+	else if (command == "WHO")
+		handleWho(client, iss);
+	else if (command == "MODE")
+		handleMode(client, iss);
+	else if (command == "INVITE")
+		handleInvite(client, iss);
+	else if (command == "AWAY") {
+		std::string awayMsg;
+		getline(iss, awayMsg);
+		if (awayMsg.empty()) {
+			client->setAway(false);
+			std::string reply = ":server 305 " + client->getNickname() + " :You are no longer marked as being away\r\n";
+			send(client->getFd(), reply.c_str(), reply.size(), 0);
+			std::cout << "Client " << client->getFd() << " is no longer away" << std::endl;
+		} else {
+			client->setAway(true);
+			client->setAwayMessage(awayMsg);
+			std::string reply = ":server 306 " + client->getNickname() + " :You have been marked as being away\r\n";
+			send(client->getFd(), reply.c_str(), reply.size(), 0);
+			std::cout << "Client " << client->getFd() << " is now away: " << awayMsg << std::endl;
+		}
+	}
     else {
         std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         std::cout << "Unknown command from client " << client->getFd() << ": " << message;
     }
 }
+
 
 void Server::handleClientData(size_t i)
 {

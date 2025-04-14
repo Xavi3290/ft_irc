@@ -68,3 +68,20 @@ void Client::setPassProvided(bool provided) {
 std::string Client::getPrefix() const {
     return _nickname + "!" + _username + "@localhost";
 }
+
+bool Client::isAway() const {
+	return _isAway;
+}
+
+void Client::setAway(bool away) {
+	_isAway = away;
+}
+
+void Client::setAwayMessage(const std::string &message) {
+	_awayMessage = message;
+}
+
+const std::string &Client::getAwayMessage() const {
+	return _awayMessage;
+}
+

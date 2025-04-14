@@ -21,12 +21,11 @@ void Server::handlePart(Client *client, std::istringstream &iss)
     }
     Channel *channel = getChannelByName(channelName);
     if (channel && channel->hasClient(client)) {
-        channel->removeClient(client);
         std::string partMsg = "You have left channel " + channelName + "\r\n";
         send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
-        std::cout << "Client " << client->getFd() << " left channel " << channelName << std::endl;
-        std::string broadcast = ":" + client->getNickname() + " has left channel " + channelName + "\r\n";
-        channel->broadcastMessage(broadcast, client);
+		partMsg = ":" + client->getPrefix() + " PART " + channelName + "\r\n";
+		channel->broadcastMessage(partMsg, client);
+        channel->removeClient(client);
     } else {
         std::string errorMsg = "Error: you are not in channel " + channelName + "\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
