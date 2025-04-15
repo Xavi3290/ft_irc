@@ -11,7 +11,8 @@
 /* ************************************************************************** */
 
 #include "../../inc/Client.hpp"
-#include <iterator>
+#include <sys/socket.h> // send()
+#include <iostream>
 
 Client::Client(int fd)
     : _fd(fd), _nickname(""), _username(""), _registered(false), _passProvided(false) {}
@@ -32,17 +33,6 @@ void Client::setNickname(const std::string &nick) {
 
 const std::string& Client::getUsername() const {
     return _username;
-}
-
-const std::vector<std::string> &Client::getChannels() const {
-    
-    std::vector<std::string> channelNames;
-
-    for(std::vector<Channels*>::iterator it = _channels.begin(); it != _channels.end(); ++it) {
-        channelNames.push_back(it.getName());
-    }
-
-    return channelNames;
 }
 
 void Client::setUsername(const std::string &username) {
@@ -85,3 +75,14 @@ const std::string &Client::getAwayMessage() const {
 	return _awayMessage;
 }
 
+void Client::send(const std::string& message) {
+    std::string msg = message;
+
+    if (msg.size() < 2 || msg.substr(msg.size() - 2) != "\r\n")
+        msg += "\r\n";
+
+    ssize_t bytesSent = ::send(_fd, msg.c_str(), msg.size(), 0);
+    if (bytesSent == -1) {
+        std::cout << "Error enviando mensaje al cliente (" << _fd << "): " << std::endl;
+    }
+}

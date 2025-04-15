@@ -17,6 +17,8 @@
 #include <vector>
 #include "Client.hpp"
 
+class Client;
+
 class Channel {
     public:
         Channel(const std::string &name);

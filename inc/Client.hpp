@@ -35,9 +35,9 @@ class Client {
 		void setAway(bool away);
 		void setAwayMessage(const std::string &message);
 		const std::string &getAwayMessage() const;
-        const std::vector<string> &getChannels() const;
 
         std::string getPrefix() const;
+        void send(const std::string &message);
 
 
     private:
@@ -48,7 +48,6 @@ class Client {
         bool _passProvided;
 		bool _isAway;
 		std::string _awayMessage;
-        std::vector<Channel*> _channels;
 };
 
 #endif

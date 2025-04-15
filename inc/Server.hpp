@@ -43,7 +43,6 @@ class Server {
         bool setupSocket();
         void handleNewConnection();
         void handleClientData(size_t i);
-        //void handleClientData();
         
         Client* findClientByFd(int fd);
         Client* findClientByNick(const std::string &nickname);
@@ -55,7 +54,6 @@ class Server {
         void sendToChannel(Client *sender, const std::string &chanelName, const std::string &message);
         void sendToUser(Client *sender, const std::string &targetNick, const std::string &message);
         void sendToAll(Client *sender, const std::string &message);
-        void sendToSharedChanels(Client *sender, const std::string &message);
 
         void sendReplyTo(Client *client, int code, const std::string &params = "", const std::string &message = "");
         

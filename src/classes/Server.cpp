@@ -79,14 +79,6 @@ void Server::sendToAll(Client *sender, const std::string &message)
     }
 }
 
-void Server::sendToSharedChanels(Client *sender, const std::string &message)
-{
-	std::set<Client*> notified;
-
-	const std::vector<std::string> 7channels = sender.get
-
-}
-
 Client* Server::findClientByNick(const std::string &nickname) {
     for (size_t i = 0; i < _clients.size(); ++i) {
         if (_clients[i]->getNickname() == nickname) {

@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <cctype>   // para std::tolower
+#include <set>
 
 std::string toLower(const std::string& str) {
     std::string result;
@@ -62,8 +63,27 @@ void Server::handleNick(Client *client, std::istringstream &iss)
     }
 
     if (client->isRegistered()){
-        client->
+        std::set<Client*> notified;
+
+        std::string msg = ":" + client->getPrefix() + " NICK :" + nickName + "\r\n";
+
+        for (std::vector<Channel*>::iterator it = this->_channels.begin(); it != this->_channels.end(); ++it) {
+            Channel *channel = *it;
+
+            if (!channel->hasClient(client))
+                continue;
+
+            const std::vector<Client*> &members = channel->getClients();
+            for (std::vector<Client*>::const_iterator mit = members.begin(); mit != members.end(); ++mit) {
+                Client *member = *mit;
+                if (notified.find(member) == notified.end()) {
+                    member->send(msg);
+                    notified.insert(member);
+                }
+            }
+        }
     }
+
     client->setNickname(nickName);
     std::cout << "Client " << client->getFd() << " set nickname to " << nickName << std::endl;
     if (!client->getNickname().empty() && !client->getUsername().empty() && client->hasProvidedPass() && !client->isRegistered()) {
