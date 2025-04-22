@@ -27,6 +27,8 @@ class Client {
         void setNickname(const std::string &nick);
         const std::string &getUsername()const;
         void setUsername(const std::string &username);
+        const std::string &getRealname() const;
+        void setRealname(const std::string &realname);
         bool isRegistered() const;
         void setRegistered(bool registered);
         bool hasProvidedPass() const;
@@ -44,6 +46,8 @@ class Client {
         int _fd;
         std::string _nickname;
         std::string _username;
+        bool _hasUser;
+        std::string _realname;
         bool _registered;
         bool _passProvided;
 		bool _isAway;
