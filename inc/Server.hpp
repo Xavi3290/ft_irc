@@ -73,6 +73,7 @@ class Server {
 		void handleWho(Client *client, std::istringstream &iss);
 		void handleMode(Client *client, std::istringstream &iss);
 		void handleInvite(Client *client, std::istringstream &iss);
+		void handleWhois(Client *client, std::istringstream &iss);
 
 
 };

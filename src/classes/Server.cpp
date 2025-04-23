@@ -255,6 +255,8 @@ void Server::parseCommand(Client *client, const std::string &message) {
 		handleMode(client, iss);
 	else if (command == "INVITE")
 		handleInvite(client, iss);
+	else if (command == "WHOIS")
+		handleWhois(client, iss);
 	else if (command == "AWAY") {
 		std::string awayMsg;
 		getline(iss, awayMsg);

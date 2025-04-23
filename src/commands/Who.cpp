@@ -32,7 +32,7 @@ void Server::handleWho(Client *client, std::istringstream &iss) {
 				status += "@";
 			std::string whoReply = ":server 352 " + client->getNickname() + " " +
 			channelname + " " + target->getUsername() + " host server " +
-			target->getNickname() + " " + status + " :0 " + target->getUsername() + "\r\n";
+			target->getNickname() + " " + status + " :0 " + target->getRealname() + "\r\n";
 			send(client->getFd(), whoReply.c_str(), whoReply.size(), 0);
 		}
 		std::string endMsg = ":server 315 " + client->getNickname() + " " + channelname + " :End of /WHO list\r\n";

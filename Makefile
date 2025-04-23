@@ -23,6 +23,7 @@ SRCS =  src/main.cpp \
 		src/commands/Who.cpp \
 		src/commands/Mode.cpp \
 		src/commands/Invite.cpp \
+		src/commands/Whois.cpp \
 
 		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp
