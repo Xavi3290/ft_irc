@@ -25,8 +25,9 @@ void Server::handlePass(Client *client, std::istringstream &iss)
         removeClient(client->getFd());
         return;
     } else {
+        client->send("Provided correct password, set USER and NICK");
         client->setPassProvided(true);
 
-        std::cout << "Client " << client->getFd() << " provided valid password." << std::endl;
+        std::cout << "Client " << client->getFd() << " provided valid password" << std::endl;
     }
 }

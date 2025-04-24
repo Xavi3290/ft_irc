@@ -85,7 +85,10 @@ void Server::handleNick(Client *client, std::istringstream &iss)
     }
 
     client->setNickname(nickName);
+    
     std::cout << "Client " << client->getFd() << " set nickname to " << nickName << std::endl;
+    client->send("NICK registered");
+
     if (!client->getNickname().empty() && !client->getUsername().empty() && client->hasProvidedPass() && !client->isRegistered()) {
         sendReplyTo(client, RPL_WELCOME, "", ("Welcome to the 42 IRC Server Network " + client->getPrefix()));
         client->setRegistered(true);

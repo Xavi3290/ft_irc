@@ -4,7 +4,6 @@
 #include <iostream>  // Para salida por consola
 #include <string>
 #include <sstream>
-#include <cstdio>  // EOF
 
 bool isValidUsername(const std::string &username) {
     for (size_t i = 0; i < username.size(); ++i) {
@@ -44,8 +43,12 @@ void Server::handleUser(Client *client, std::istringstream &iss)
     } else {
         realname = token;
     }
+
     client->setRealname(realname);
-    std::cout << "Client " << client->getFd() << " set username to " << username << "& realname: " << realname << std::endl;
+
+    std::cout << "Client " << client->getFd() << " set username to " << username << " & realname: " << realname << std::endl;
+    client->send("USER registered");
+
     if (!client->getNickname().empty() && !client->getUsername().empty() && client->hasProvidedPass() && !client->isRegistered()) {
         sendReplyTo(client, RPL_WELCOME, "", ("Welcome to the 42 IRC Server Network " + client->getPrefix()));
         client->setRegistered(true);
