@@ -174,6 +174,8 @@ void Server::handleNewConnection() {
         _pollFds.push_back(client_poll);
 
         Client *newClient = new Client(client_fd);
+		std::string ip = inet_ntoa(_server_addr.sin_addr);
+		newClient->setIP(ip);
         _clients.push_back(newClient);
 
         std::cout << "New connection accepted: fd = " << client_fd << std::endl;
