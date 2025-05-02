@@ -37,6 +37,8 @@ class Client {
 		void setAway(bool away);
 		void setAwayMessage(const std::string &message);
 		const std::string &getAwayMessage() const;
+		const std::string &getIP() const;
+		void setIP(const std::string &ip);
 
         std::string getPrefix() const;
         void send(const std::string &message);
@@ -52,6 +54,7 @@ class Client {
         bool _passProvided;
 		bool _isAway;
 		std::string _awayMessage;
+		std::string _ip;
 };
 
 #endif

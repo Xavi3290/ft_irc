@@ -14,6 +14,7 @@
 #include <sstream> 
 #include <set>
 
+
 Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {}
 
 Server::~Server()
@@ -173,6 +174,8 @@ void Server::handleNewConnection() {
         _pollFds.push_back(client_poll);
 
         Client *newClient = new Client(client_fd);
+		std::string ip = inet_ntoa(_server_addr.sin_addr);
+		newClient->setIP(ip);
         _clients.push_back(newClient);
 
         std::cout << "New connection accepted: fd = " << client_fd << std::endl;
@@ -255,24 +258,10 @@ void Server::parseCommand(Client *client, const std::string &message) {
 		handleMode(client, iss);
 	else if (command == "INVITE")
 		handleInvite(client, iss);
-	else if (command == "WHOIS")
+	else if (command == "WHOIS" || command == "whois")
 		handleWhois(client, iss);
-	else if (command == "AWAY") {
-		std::string awayMsg;
-		getline(iss, awayMsg);
-		if (awayMsg.empty()) {
-			client->setAway(false);
-			std::string reply = ":server 305 " + client->getNickname() + " :You are no longer marked as being away\r\n";
-			send(client->getFd(), reply.c_str(), reply.size(), 0);
-			std::cout << "Client " << client->getFd() << " is no longer away" << std::endl;
-		} else {
-			client->setAway(true);
-			client->setAwayMessage(awayMsg);
-			std::string reply = ":server 306 " + client->getNickname() + " :You have been marked as being away\r\n";
-			send(client->getFd(), reply.c_str(), reply.size(), 0);
-			std::cout << "Client " << client->getFd() << " is now away: " << awayMsg << std::endl;
-		}
-	}
+	else if (command == "AWAY") 
+		handleAway(client, iss);
     else {
         std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);

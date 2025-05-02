@@ -94,3 +94,11 @@ void Client::send(const std::string& message) {
         std::cout << "Error enviando mensaje al cliente (" << _fd << "): " << std::endl;
     }
 }
+
+void Client::setIP(const std::string &ip) {
+	_ip = ip;
+}
+
+const std::string &Client::getIP() const {
+	return _ip;
+}

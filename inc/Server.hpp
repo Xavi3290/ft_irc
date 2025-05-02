@@ -74,6 +74,7 @@ class Server {
 		void handleMode(Client *client, std::istringstream &iss);
 		void handleInvite(Client *client, std::istringstream &iss);
 		void handleWhois(Client *client, std::istringstream &iss);
+		void handleAway(Client *client, std::istringstream &iss);
 
 
 };
