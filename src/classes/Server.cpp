@@ -278,10 +278,19 @@ void Server::handleClientData(size_t i)
         int bytes_read = recv(_pollFds[i].fd, buffer, sizeof(buffer), 0);
         if (bytes_read > 0)
         {
-            std::string message(buffer, bytes_read);
             Client *client = findClientByFd(_pollFds[i].fd);
-            if (client)
-                parseCommand(client, message);
+            if (client) {
+                std::string message(buffer, bytes_read);
+                client->appendBuffer(message);
+
+                std::string &fullBuffer = client->getBuffer();
+                size_t pos;
+                while ((pos = fullBuffer.find("\n")) != std::string::npos) {
+                    std::string rawCommand = fullBuffer.substr(0, pos);
+                    fullBuffer.erase(0, pos + 1);
+                    parseCommand(client, rawCommand);
+                }
+            }
             else
                 std::cout << "Recived data from unknown client fd: " << _pollFds[i].fd << std::endl;   //sin std::endl para no hacer flush?
             // Aquí se puede añadir el parseo y la gestión de comandos IRC

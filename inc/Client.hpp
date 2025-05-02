@@ -43,6 +43,9 @@ class Client {
         std::string getPrefix() const;
         void send(const std::string &message);
 
+        void appendBuffer(const std::string &data);
+        std::string &getBuffer();
+
 
     private:
         int _fd;
@@ -55,6 +58,8 @@ class Client {
 		bool _isAway;
 		std::string _awayMessage;
 		std::string _ip;
+
+        std::string _buffer;
 };
 
 #endif

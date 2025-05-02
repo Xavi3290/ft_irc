@@ -102,3 +102,11 @@ void Client::setIP(const std::string &ip) {
 const std::string &Client::getIP() const {
 	return _ip;
 }
+
+void Client::appendBuffer(const std::string &data) {
+    _buffer += data;
+}
+
+std::string &Client::getBuffer() {
+    return _buffer;
+}
