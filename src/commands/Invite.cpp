@@ -30,8 +30,7 @@ void Server::handleInvite(Client *client, std::istringstream &iss) {
 			return;
 		}
 		channel->addInvited(target);
-		std::string reply341 = ":server 341 " + client->getNickname() + " " + targetNick + " " + channelName + "\r\n";
-		send(client->getFd(), reply341.c_str(), reply341.size(), 0);
+		sendReplyTo(client, RPL_INVITING, targetNick, channelName);
 		std::string inviteMsg = ":" + client->getPrefix() + " INVITE " + targetNick + " :" + channelName + "\r\n";
 		send(target->getFd(), inviteMsg.c_str(), inviteMsg.size(), 0);
 
