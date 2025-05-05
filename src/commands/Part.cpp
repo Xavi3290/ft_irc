@@ -26,7 +26,7 @@ void Server::handlePart(Client *client, std::istringstream &iss)
  		std::string partMsg = ":" + client->getPrefix() + " PART " + channel->getOriginalName() + "\r\n";
         send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
 		channel->broadcastMessage(partMsg, client);
-        channel->removeClient(client);
+		removeClientChannel(client->getFd());
     } else {
         sendReplyTo(client, ERR_NOTONCHANNEL, channelName, "You're not on that channel");
     }
