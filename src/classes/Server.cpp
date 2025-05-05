@@ -226,7 +226,7 @@ void Server::removeClientChannel(int fd) {
 					_channels.erase(_channels.begin() + i);
 				}
 				else
-					channel->broadcastMessage(":" + channel->getClients()[j]->getNickname() + " PART " + channel->getName() + "\r\n", channel->getClients()[j]);
+					channel->broadcastMessage(":" + channel->getClients()[j]->getNickname() + " PART " + channel->getOriginalName() + "\r\n", channel->getClients()[j]);
 				break;
 			}
 		}
