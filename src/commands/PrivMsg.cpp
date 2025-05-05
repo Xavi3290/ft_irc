@@ -125,8 +125,6 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
 			target + findClientByNick(target)->getAwayMessage() + "\r\n";
 			send(client->getFd(), awayMsg.c_str(), awayMsg.size(), 0);
 		}
-		std::cout << "msg is : " << msg << std::endl;
-
  		sendToUser(client, target, msg);
         std::cout << "Message from client " << client->getFd() << " to user " << target << std::endl;
     } else {
