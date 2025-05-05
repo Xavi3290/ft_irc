@@ -4,6 +4,7 @@
 #include <iostream>  // Para salida por consola
 #include <string>
 #include <sstream> 
+#include <cctype>   // para std::tolower
 
 void Server::handleJoin(Client *client, std::istringstream &iss)
 {
@@ -50,7 +51,7 @@ void Server::handleJoin(Client *client, std::istringstream &iss)
         channel->addClient(client);
     }
     
-    std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channelName + "\r\n";
+    std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channel->getOriginalName() + "\r\n";
     channel->broadcastMessage(joinMsg, NULL);
     
     //////////////////////////////////MAX VERSION////////////////////////////////////////////////////

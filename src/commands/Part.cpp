@@ -19,11 +19,11 @@ void Server::handlePart(Client *client, std::istringstream &iss)
     }
     Channel *channel = getChannelByName(channelName);
     if (!channel) {
-        sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
+        sendReplyTo(client, ERR_NOSUCHCHANNEL, channel->getOriginalName(), "No such channel");
         return;
     }
     else if (channel->hasClient(client)) {
- 		std::string partMsg = ":" + client->getPrefix() + " PART " + channelName + "\r\n";
+ 		std::string partMsg = ":" + client->getPrefix() + " PART " + channel->getOriginalName() + "\r\n";
         send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
 		channel->broadcastMessage(partMsg, client);
         channel->removeClient(client);

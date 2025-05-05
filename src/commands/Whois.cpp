@@ -28,7 +28,7 @@ void Server::handleWhois(Client *client, std::istringstream &iss) {
 		if (_channels[i]->hasClient(target) && _channels[i]->hasClient(client)) {
 			if (_channels[i]->isOperator(target))
 				channelList += "@";
-			channelList += _channels[i]->getName() + " ";
+			channelList += _channels[i]->getOriginalName() + " ";
 		}
 	}
 	if (!channelList.empty()) {
