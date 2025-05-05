@@ -25,7 +25,7 @@ void Server::handleWho(Client *client, std::istringstream &iss) {
 				if (channel->isOperator(clients[i]))
 					status += "@";
 				std::string whoReply = ":server 352 " + client->getNickname() + " " +
-				channel->getName() + " " + target->getUsername() + " host server " +
+				channel->getOriginalName() + " " + target->getUsername() + " host server " +
 				target->getNickname() + " " + status + " :0 " + target->getRealname() + "\r\n";
 				send(client->getFd(), whoReply.c_str(), whoReply.size(), 0);
 			}

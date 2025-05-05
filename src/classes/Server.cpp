@@ -1,5 +1,6 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
+#include "../../inc/Utils.hpp"
 
 #include <iostream>  // Para salida por consola
 #include <cstdlib>    // Para atoi() y EXIT_SUCCESS/EXIT_FAILURE
@@ -342,8 +343,9 @@ void Server::run() {
 }
 
 Channel *Server::getChannelByName(const std::string &name) {
+    std::string lowerName = toLower(name);
     for (size_t i = 0; i < _channels.size(); i++) {
-        if (_channels[i]->getName() == name) {
+        if (_channels[i]->getLowerName() == lowerName) {
             return _channels[i];
         }
     }
