@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:09:19 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/26 19:46:17 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/05/05 18:54:02 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -43,7 +43,6 @@ class Server {
         bool setupSocket();
         void handleNewConnection();
         void handleClientData(size_t i);
-        //void handleClientData();
         
         Client* findClientByFd(int fd);
         Client* findClientByNick(const std::string &nickname);
@@ -51,6 +50,7 @@ class Server {
         void parseCommand(Client *client, const std::string &message);
         
         Channel *getChannelByName(const std::string &name);
+		void removeClientChannel(int fd);
         
         void sendToChannel(Client *sender, const std::string &chanelName, const std::string &message);
         void sendToUser(Client *sender, const std::string &targetNick, const std::string &message);
@@ -71,10 +71,13 @@ class Server {
         void handleKick(Client *client, std::istringstream &iss);
         void handleTopic(Client *client, std::istringstream &iss);
         void handleQuit(Client *client, std::istringstream &iss);
+		void handleWho(Client *client, std::istringstream &iss);
+		void handleMode(Client *client, std::istringstream &iss);
+		void handleInvite(Client *client, std::istringstream &iss);
+		void handleWhois(Client *client, std::istringstream &iss);
+		void handleAway(Client *client, std::istringstream &iss);
 
 
-
-        // void handleJoin(Client *client, const std::string &channelName, const std::string &key);
 };
 
 #endif

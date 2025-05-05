@@ -1,8 +1,9 @@
 NAME = ircserv
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
 SRCS =  src/main.cpp \
+		src/Utils.cpp \
 		src/classes/Server.cpp \
 		src/classes/Client.cpp \
 		src/classes/Channel.cpp \
@@ -20,9 +21,14 @@ SRCS =  src/main.cpp \
 		src/commands/Kick.cpp \
 		src/commands/Topic.cpp \
 		src/commands/Quit.cpp \
+		src/commands/Who.cpp \
+		src/commands/Mode.cpp \
+		src/commands/Invite.cpp \
+		src/commands/Whois.cpp \
+		src/commands/Away.cpp \
 
 		
-INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp
+INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp inc/Utils.hpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)

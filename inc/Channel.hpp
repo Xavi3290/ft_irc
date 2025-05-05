@@ -17,12 +17,15 @@
 #include <vector>
 #include "Client.hpp"
 
+class Client;
+
 class Channel {
     public:
         Channel(const std::string &name);
         ~Channel();
         
-        const std::string &getName() const;
+        const std::string &getOriginalName() const;
+        const std::string &getLowerName() const;
         void addClient(Client *client);
         void removeClient(Client *client);
         bool hasClient(Client *client) const;
@@ -59,7 +62,8 @@ class Channel {
 		bool isInvited(Client *client) const;
 
     private:
-        std::string _name;
+        std::string _originalName;
+		std::string _lowerName;
 		std::string _topic;
         std::vector<Client*> _clients;
 		std::vector<Client*> _operators;

@@ -16,7 +16,7 @@ void Server::handleList(Client *client)
     send(client->getFd(), listMsg.c_str(), listMsg.size(), 0);
     for (size_t i = 0; i < _channels.size(); i++) {
         Channel *channel = _channels[i];
-        std::string channelName = channel->getName();
+        std::string channelName = channel->getOriginalName();
         std::string topic = channel->getTopic();
         if (topic.empty())
             topic = "No topic";

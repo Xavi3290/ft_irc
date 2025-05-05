@@ -11,6 +11,8 @@
 /* ************************************************************************** */
 
 #include "../../inc/Client.hpp"
+#include <sys/socket.h> // send()
+#include <iostream>
 
 Client::Client(int fd)
     : _fd(fd), _nickname(""), _username(""), _registered(false), _passProvided(false) {}
@@ -35,6 +37,14 @@ const std::string& Client::getUsername() const {
 
 void Client::setUsername(const std::string &username) {
     _username = username;
+}
+
+const std::string& Client::getRealname() const {
+    return _realname;
+}
+
+void Client::setRealname(const std::string &realname) {
+    _realname = realname;
 }
 
 bool Client::isRegistered() const {
@@ -73,3 +83,30 @@ const std::string &Client::getAwayMessage() const {
 	return _awayMessage;
 }
 
+void Client::send(const std::string& message) {
+    std::string msg = message;
+
+    if (msg.size() < 2 || msg.substr(msg.size() - 2) != "\r\n")
+        msg += "\r\n";
+
+    ssize_t bytesSent = ::send(_fd, msg.c_str(), msg.size(), 0);
+    if (bytesSent == -1) {
+        std::cout << "Error enviando mensaje al cliente (" << _fd << "): " << std::endl;
+    }
+}
+
+void Client::setIP(const std::string &ip) {
+	_ip = ip;
+}
+
+const std::string &Client::getIP() const {
+	return _ip;
+}
+
+void Client::appendBuffer(const std::string &data) {
+    _buffer += data;
+}
+
+std::string &Client::getBuffer() {
+    return _buffer;
+}

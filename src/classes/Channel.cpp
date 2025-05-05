@@ -11,19 +11,30 @@
 /* ************************************************************************** */
 
 #include "../../inc/Channel.hpp"
+#include "../../inc/Utils.hpp"
 #include <algorithm>
 #include <sys/socket.h>
 #include <iostream>
 #include <sstream>
+#include <cctype>   // para std::tolower
 
-Channel::Channel(const std::string &name) : _name(name), _topicRestricted(true), _maxClients(0){}
+Channel::Channel(const std::string &name) {
+	_originalName = name;
+	_topicRestricted  = true; 
+	_maxClients = 0;
+    _lowerName = toLower(name);
+}
 
 Channel::~Channel() {
     _clients.clear();
 }
 
-const std::string &Channel::getName() const {
-    return _name;
+const std::string &Channel::getOriginalName() const {
+    return _originalName;
+}
+
+const std::string &Channel::getLowerName() const {
+    return _lowerName;
 }
 
 void Channel::addClient(Client *client) {
