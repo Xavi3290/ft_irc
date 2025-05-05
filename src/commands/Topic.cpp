@@ -15,7 +15,10 @@ void Server::handleTopic(Client *client, std::istringstream &iss)
     }
     std::getline(iss, newTopic);
     if(!newTopic.empty() && newTopic[0] == ' ')
-        newTopic = newTopic.substr(1);
+		if (newTopic[1] == ':')
+			newTopic = newTopic.substr(2);
+        else
+			newTopic = newTopic.substr(1);
     else
         newTopic = "No topic";
     Channel *channel = getChannelByName(channelName);

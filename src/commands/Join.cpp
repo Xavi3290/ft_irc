@@ -72,7 +72,14 @@ void Server::handleJoin(Client *client, std::istringstream &iss)
     //////////////////////////////////GUILLE VERSION////////////////////////////////////////////////////
 
     if (channel) {
-        const std::vector<Client *> &clients = channel->getClients();
+		
+		if (channel->getTopic().empty())
+			sendReplyTo(client, RPL_NOTOPIC, client->getNickname(), channelName + " :No topic is set");
+		else {
+			std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";
+			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
+		}
+		const std::vector<Client *> &clients = channel->getClients();
         std::string nameList;
         for (size_t i = 0; i < clients.size(); i++){
             if (channel->isOperator(clients[i]))

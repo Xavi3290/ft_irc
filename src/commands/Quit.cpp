@@ -18,12 +18,12 @@ void Server::handleQuit(Client *client, std::istringstream &iss)
         }
     }
     std::cout << "Client " << client->getFd() << " quit" << std::endl;
-    close(client->getFd());
-    removeClient(client->getFd());
     for (size_t i = 0; i < _pollFds.size(); i++) {
         if (_pollFds[i].fd == client->getFd()) {
             _pollFds.erase(_pollFds.begin() + i);
             break;
         }
     }
+    close(client->getFd());
+    removeClient(client->getFd());
 }

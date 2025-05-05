@@ -67,7 +67,7 @@ void Server::sendToUser(Client *sender, const std::string &targetNick, const std
         return;
     }
 
-    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@localhost PRIVMSG " + receiver->getNickname() + " :" + message + "\r\n";
+    std::string fullMsg = ":" + sender->getNickname() + "!" + sender->getUsername() + "@localhost PRIVMSG " + receiver->getNickname() + message + "\r\n";
     send(receiver->getFd(), fullMsg.c_str(), fullMsg.size(), 0);
 }
 
