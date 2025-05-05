@@ -119,7 +119,15 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
         //channel->broadcastMessage(broadcast, client);
         std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
     } else if(findClientByNick(target)) {
-        sendToUser(client, target, msg);
+		if (findClientByNick(target)->isAway()) {
+			std::cout << "teeeeest" << std::endl;
+			std::string awayMsg = ":server 301 " + client->getNickname() + " " +
+			target + findClientByNick(target)->getAwayMessage() + "\r\n";
+			send(client->getFd(), awayMsg.c_str(), awayMsg.size(), 0);
+		}
+		std::cout << "msg is : " << msg << std::endl;
+
+ 		sendToUser(client, target, msg);
         std::cout << "Message from client " << client->getFd() << " to user " << target << std::endl;
     } else {
         std::string errorMsg = "Error: you are not in channel " + target + "\r\n";
