@@ -25,5 +25,6 @@ void Server::handleQuit(Client *client, std::istringstream &iss)
         }
     }
     close(client->getFd());
+	removeClientChannel(client->getFd());
     removeClient(client->getFd());
 }

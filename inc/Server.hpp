@@ -50,6 +50,7 @@ class Server {
         void parseCommand(Client *client, const std::string &message);
         
         Channel *getChannelByName(const std::string &name);
+		void removeClientChannel(int fd);
         
         void sendToChannel(Client *sender, const std::string &chanelName, const std::string &message);
         void sendToUser(Client *sender, const std::string &targetNick, const std::string &message);

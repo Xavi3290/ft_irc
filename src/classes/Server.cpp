@@ -214,6 +214,24 @@ void Server::removeClient(int fd) {
     }
 }
 
+void Server::removeClientChannel(int fd) {
+	for (size_t i = 0; i < _channels.size(); i++) {
+		Channel *channel = _channels[i];
+		for (size_t j = 0; j < channel->getClients().size(); j++) {
+			if (channel->getClients()[j]->getFd() == fd) {
+				channel->removeClient(channel->getClients()[j]);
+				if (channel->getClients().empty()) {
+					delete channel;
+					_channels.erase(_channels.begin() + i);
+				}
+				else
+					channel->broadcastMessage(":" + channel->getClients()[j]->getNickname() + " PART " + channel->getName() + "\r\n", channel->getClients()[j]);
+				break;
+			}
+		}
+	}
+}
+
 void Server::parseCommand(Client *client, const std::string &message) {
     std::istringstream iss(message);
     std::string command;
