@@ -23,9 +23,8 @@ void Server::handlePart(Client *client, std::istringstream &iss)
         return;
     }
     else if (channel->hasClient(client)) {
-        std::string partMsg = "You have left channel " + channelName + "\r\n";
+ 		std::string partMsg = ":" + client->getPrefix() + " PART " + channelName + "\r\n";
         send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
-		partMsg = ":" + client->getPrefix() + " PART " + channelName + "\r\n";
 		channel->broadcastMessage(partMsg, client);
         channel->removeClient(client);
     } else {

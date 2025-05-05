@@ -51,7 +51,7 @@ class Client {
         int _fd;
         std::string _nickname;
         std::string _username;
-        bool _hasUser;
+        //bool _hasUser;
         std::string _realname;
         bool _registered;
         bool _passProvided;
