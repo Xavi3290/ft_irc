@@ -259,8 +259,6 @@ void Server::parseCommand(Client *client, const std::string &message) {
         handlePrivMsg(client, iss);
     else if (command == "PART")
         handlePart(client, iss);
-    else if (command == "FILE")
-        handleFile(client, iss);
 	else if (command == "LIST")
         handleList(client);
 	else if (command == "NAMES")
