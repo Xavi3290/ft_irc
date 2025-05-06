@@ -9,14 +9,12 @@
 void Server::handlePrivMsg(Client *client, std::istringstream &iss)
 {
     if (!client->isRegistered()) {
-        std::string errorMsg = ":server 451 * :You have not registered\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
         return;
     }
     std::string target;
     if (!(iss >> target)) {
-        std::string errorMsg = ":server 461 PRIVMSG :Not enough parameters\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(client, ERR_NEEDMOREPARAMS, "PRIVMSG", "Not enough parameters");
         return;
     }
     std::string msg;
