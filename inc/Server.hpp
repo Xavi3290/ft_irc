@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:09:19 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/05/05 18:54:02 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/05/06 18:58:03 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -76,8 +76,7 @@ class Server {
 		void handleInvite(Client *client, std::istringstream &iss);
 		void handleWhois(Client *client, std::istringstream &iss);
 		void handleAway(Client *client, std::istringstream &iss);
-
-
+        void handleBotCommand(const std::string &target, const std::string &msg);
 };
 
 #endif
