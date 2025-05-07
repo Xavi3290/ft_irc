@@ -33,9 +33,9 @@ void Server::handleJoin(Client *client, std::istringstream &iss)
         channel = new Channel(channelName);
         _channels.push_back(channel);
         channel->addOperator(client);
+		channel->addClient(client);
     }
-    
-    if (!channel->hasClient(client)) {
+	if (!channel->hasClient(client)) {
         if (channel->isInviteOnly() && !channel->isInvited(client)) {
             sendReplyTo(client, ERR_INVITEONLYCHAN, channelName, "Cannot join channel (+i)");
             return;
