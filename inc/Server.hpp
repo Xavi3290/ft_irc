@@ -6,7 +6,7 @@
 /*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/03/13 19:09:19 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/05/06 18:58:03 by xroca-pe         ###   ########.fr       */
+/*   Updated: 2025/05/07 17:52:56 by xroca-pe         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,6 +17,7 @@
 #include <vector>
 #include <sys/poll.h> // Para struct pollfd y la función poll()
 #include <arpa/inet.h>   // Para sockaddr_in, inet_addr()
+#include <map>           
 #include "Client.hpp"
 #include "Channel.hpp"
 
@@ -37,7 +38,6 @@ class Server {
         std::vector<pollfd> _pollFds;
         std::vector<Client*> _clients;
         std::vector<Channel*> _channels;
-
         
         bool setNonBlocking(int fd);
         bool setupSocket();
@@ -57,6 +57,9 @@ class Server {
         void sendToAll(Client *sender, const std::string &message);
 
         void sendReplyTo(Client *client, int code, const std::string &params = "", const std::string &message = "");
+
+        typedef void (Server::*CommandHandler)(Client* client, std::istringstream&);
+        std::map<std::string, CommandHandler> _handlers;
         
         void handlePass(Client *client, std::istringstream &iss);
         void handleNick(Client *client, std::istringstream &iss);
@@ -66,7 +69,7 @@ class Server {
         void handlePrivMsg(Client *client, std::istringstream &iss);
         void handlePart(Client *client, std::istringstream &iss);
         void handleFile(Client *client, std::istringstream &iss);
-        void handleList(Client *client);
+        void handleList(Client *client, std::istringstream &iss);
         void handleNames(Client *client, std::istringstream &iss);
         void handleKick(Client *client, std::istringstream &iss);
         void handleTopic(Client *client, std::istringstream &iss);
