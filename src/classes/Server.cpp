@@ -221,6 +221,7 @@ void Server::removeClientChannel(int fd) {
 		for (size_t j = 0; j < channel->getClients().size(); j++) {
 			if (channel->getClients()[j]->getFd() == fd) {
 				channel->removeClient(channel->getClients()[j]);
+				channel->removeOperator(channel->getClients()[j]);
 				if (channel->getClients().empty()) {
 					delete channel;
 					_channels.erase(_channels.begin() + i);

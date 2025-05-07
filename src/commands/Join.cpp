@@ -73,8 +73,11 @@ void Server::handleJoin(Client *client, std::istringstream &iss)
 
     if (channel) {
 		
-		if (channel->getTopic().empty())
-			sendReplyTo(client, RPL_NOTOPIC, client->getNickname(), channelName + " :No topic is set");
+		if (channel->getTopic().empty()) {
+						
+			std::string errorMsg = ":server 331 " + client->getNickname() + " " + channelName + " :No topic is set\r\n";
+        	send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+		} 
 		else {
 			std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";
 			send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
