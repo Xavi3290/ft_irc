@@ -25,6 +25,7 @@ class NumericReplies
 #define ERR_NOSUCHNICK          401
 #define ERR_NOSUCHCHANNEL       403
 #define ERR_CANNOTSENDTOCHAN    404
+#define ERR_NOORIGIN            409
 #define ERR_USERNOTINCHANNEL    441
 #define ERR_NOTONCHANNEL        442
 #define ERR_USERONCHANNEL       443

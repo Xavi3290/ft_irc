@@ -9,8 +9,7 @@ void Server::handlePing(Client *client, std::istringstream &iss)
 {
     std::string parameter;
     if (!(iss >> parameter)) {
-        std::string errorMsg = ":server 409 * :No origin specified for PING\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(client, ERR_NOORIGIN, "", "No origin specified");
         return;
     }
     std::string pong = "PONG " + parameter + "\r\n";
