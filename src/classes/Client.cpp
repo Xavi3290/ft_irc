@@ -15,7 +15,7 @@
 #include <iostream>
 
 Client::Client(int fd)
-    : _fd(fd), _nickname(""), _username(""), _registered(false), _passProvided(false) {}
+    : _fd(fd), _nickname(""), _username(""), _registered(false), _passProvided(false), _isAway(false) {}
 
 Client::~Client() {}
 

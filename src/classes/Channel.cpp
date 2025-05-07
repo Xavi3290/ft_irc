@@ -20,7 +20,9 @@
 
 Channel::Channel(const std::string &name) {
 	_originalName = name;
-	_topicRestricted  = true; 
+	_topicRestricted  = true;
+	_inviteOnly = false;
+	_keySet = false;
 	_maxClients = 0;
     _lowerName = toLower(name);
 }
