@@ -29,6 +29,10 @@ void Server::handleInvite(Client *client, std::istringstream &iss) {
 			sendReplyTo(client, ERR_USERONCHANNEL, targetNick + " " + channelName, "User is already on the channel");
 			return;
 		}
+		if (channel->isInviteOnly() && !channel->isOperator(client)) {
+			sendReplyTo(client, ERR_CHANOPRIVSNEEDED, channelName, "You're not channel operator");
+			return;
+		}
 		channel->addInvited(target);
 		sendReplyTo(client, RPL_INVITING, targetNick, channelName);
 		std::string inviteMsg = ":" + client->getPrefix() + " INVITE " + targetNick + " :" + channelName + "\r\n";

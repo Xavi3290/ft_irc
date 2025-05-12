@@ -49,5 +49,6 @@ void Server::handleKick(Client *client, std::istringstream &iss)
     std::string kickMsg = ":server KICK " + channelName + " " + targetNick + " :You have been kicked from the channel\r\n";
     send(target->getFd(), kickMsg.c_str(), kickMsg.size(), 0);
     std::string broadcast = ":" + client->getNickname() + " KICK " + channelName + " " + targetNick + " :has been kicked from the channel\r\n";
+	send(client->getFd(), broadcast.c_str(), broadcast.size(), 0);
     channel->broadcastMessage(broadcast, client);
 }

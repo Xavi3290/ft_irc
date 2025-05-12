@@ -23,11 +23,13 @@ void Server::handlePart(Client *client, std::istringstream &iss)
         return;
     }
     else if (channel->hasClient(client)) {
+		if (channel->isOperator(client)) 
+			channel->removeOperator(client);
  		std::string partMsg = ":" + client->getPrefix() + " PART " + channel->getOriginalName() + "\r\n";
         send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
 		channel->broadcastMessage(partMsg, client);
 		removeClientChannel(client->getFd());
-    } else {
+	}
+	else
         sendReplyTo(client, ERR_NOTONCHANNEL, channelName, "You're not on that channel");
-    }
 }
