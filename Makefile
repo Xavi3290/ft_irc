@@ -1,22 +1,34 @@
-# **************************************************************************** #
-#                                                                              #
-#                                                         :::      ::::::::    #
-#    Makefile                                           :+:      :+:    :+:    #
-#                                                     +:+ +:+         +:+      #
-#    By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+         #
-#                                                 +#+#+#+#+#+   +#+            #
-#    Created: 2025/03/13 18:55:19 by xroca-pe          #+#    #+#              #
-#    Updated: 2025/03/13 20:34:34 by xroca-pe         ###   ########.fr        #
-#                                                                              #
-# **************************************************************************** #
-
-
 NAME = ircserv
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 
-SRCS = src/main.cpp src/classes/Server.cpp
-INCLUDES = inc/Server.hpp
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
+SRCS =  src/main.cpp \
+		src/Utils.cpp \
+		src/classes/Server.cpp \
+		src/classes/Client.cpp \
+		src/classes/Channel.cpp \
+		src/classes/NumericReplies.cpp \
+		src/commands/Pass.cpp \
+		src/commands/Nick.cpp \
+		src/commands/User.cpp \
+		src/commands/Ping.cpp \
+		src/commands/Join.cpp \
+		src/commands/PrivMsg.cpp \
+		src/commands/Part.cpp \
+		src/commands/File.cpp \
+		src/commands/List.cpp \
+		src/commands/Names.cpp \
+		src/commands/Kick.cpp \
+		src/commands/Topic.cpp \
+		src/commands/Quit.cpp \
+		src/commands/Who.cpp \
+		src/commands/Mode.cpp \
+		src/commands/Invite.cpp \
+		src/commands/Whois.cpp \
+		src/commands/Away.cpp \
+
+		
+INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp inc/Utils.hpp
 OBJS = $(SRCS:.cpp=.o)
 
 all: $(NAME)
