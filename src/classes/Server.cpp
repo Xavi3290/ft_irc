@@ -16,7 +16,27 @@
 #include <set>
 
 
-Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {}
+Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {
+
+    _handlers["PASS"]    = &Server::handlePass;
+    _handlers["NICK"]    = &Server::handleNick;
+    _handlers["USER"]    = &Server::handleUser;
+    _handlers["PING"]    = &Server::handlePing;
+    _handlers["JOIN"]    = &Server::handleJoin;
+    _handlers["PRIVMSG"] = &Server::handlePrivMsg;
+    _handlers["PART"]    = &Server::handlePart;
+    _handlers["LIST"]    = &Server::handleList;
+    _handlers["NAMES"]   = &Server::handleNames;
+    _handlers["KICK"]    = &Server::handleKick;
+    _handlers["TOPIC"]   = &Server::handleTopic;
+    _handlers["QUIT"]    = &Server::handleQuit;
+    _handlers["WHO"]     = &Server::handleWho;
+    _handlers["MODE"]    = &Server::handleMode;
+    _handlers["INVITE"]  = &Server::handleInvite;
+    _handlers["WHOIS"]   = &Server::handleWhois;
+    _handlers["whois"]   = &Server::handleWhois;
+    _handlers["AWAY"]    = &Server::handleAway;
+}
 
 Server::~Server()
 {
@@ -221,7 +241,6 @@ void Server::removeClientChannel(int fd) {
 		for (size_t j = 0; j < channel->getClients().size(); j++) {
 			if (channel->getClients()[j]->getFd() == fd) {
 				channel->removeClient(channel->getClients()[j]);
-				channel->removeOperator(channel->getClients()[j]);
 				if (channel->getClients().empty()) {
 					delete channel;
 					_channels.erase(_channels.begin() + i);
@@ -241,54 +260,16 @@ void Server::parseCommand(Client *client, const std::string &message) {
 
 
 	std::cout << "Command: " << message << std::endl;
-    if (command != "PASS" && !client->hasProvidedPass()) {
-		sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
-        return;
-    }
-
-    if (command == "PASS")
-        handlePass(client, iss); 
-    else if (command == "NICK")
-        handleNick(client, iss);
-    else if (command == "USER")
-        handleUser(client, iss);
-    else if (command == "PING")
-        handlePing(client, iss);
-    else if (command == "JOIN")
-        handleJoin(client, iss);
-    else if (command == "PRIVMSG")
-        handlePrivMsg(client, iss);
-    else if (command == "PART")
-        handlePart(client, iss);
-    else if (command == "FILE")
-        handleFile(client, iss);
-	else if (command == "LIST")
-        handleList(client);
-	else if (command == "NAMES")
-        handleNames(client, iss);
-	else if (command == "KICK")
-        handleKick(client, iss);
-	else if (command == "TOPIC")
-        handleTopic(client, iss);
-	else if (command == "QUIT")
-        handleQuit(client, iss);
-	else if (command == "WHO")
-		handleWho(client, iss);
-	else if (command == "MODE")
-		handleMode(client, iss);
-	else if (command == "INVITE")
-		handleInvite(client, iss);
-	else if (command == "WHOIS" || command == "whois")
-		handleWhois(client, iss);
-	else if (command == "AWAY") 
-		handleAway(client, iss);
-    else {
+    std::map<std::string, CommandHandler>::iterator it = _handlers.find(command);
+    if (it != _handlers.end()) {
+        CommandHandler handler = it->second;
+        (this->*handler)(client, iss);
+    } else {
         std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-        std::cout << "Unknown command from client " << client->getFd() << ": " << message;
+        std::cout << "Unknown command from client " << client->getFd() << ": " << message << std::endl;
     }
 }
-
 
 void Server::handleClientData(size_t i)
 {

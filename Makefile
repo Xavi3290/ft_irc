@@ -15,7 +15,6 @@ SRCS =  src/main.cpp \
 		src/commands/Join.cpp \
 		src/commands/PrivMsg.cpp \
 		src/commands/Part.cpp \
-		src/commands/File.cpp \
 		src/commands/List.cpp \
 		src/commands/Names.cpp \
 		src/commands/Kick.cpp \
@@ -26,6 +25,7 @@ SRCS =  src/main.cpp \
 		src/commands/Invite.cpp \
 		src/commands/Whois.cpp \
 		src/commands/Away.cpp \
+		src/commands/Bot.cpp \
 
 		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp inc/Utils.hpp

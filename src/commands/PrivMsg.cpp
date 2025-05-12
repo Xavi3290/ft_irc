@@ -9,14 +9,12 @@
 void Server::handlePrivMsg(Client *client, std::istringstream &iss)
 {
     if (!client->isRegistered()) {
-        std::string errorMsg = ":server 451 * :You have not registered\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
         return;
     }
     std::string target;
     if (!(iss >> target)) {
-        std::string errorMsg = ":server 461 PRIVMSG :Not enough parameters\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+        sendReplyTo(client, ERR_NEEDMOREPARAMS, "PRIVMSG", "Not enough parameters");
         return;
     }
     std::string msg;
@@ -25,90 +23,7 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
     
 
     if (msg.find("!bot") != std::string::npos) {
-        if (msg.find("!bot hello") != std::string::npos) {
-            std::string botResponse = ":Bot PRIVMSG " + target + " :Hello, I am Bot!\r\n";
-            Channel *channel = getChannelByName(target);
-            if (channel) {
-                channel->broadcastMessage(botResponse, NULL);
-                std::cout << "Bot responded in channel " << target << std::endl;
-            }
-        }
-        else if (msg.find("!bot help") != std::string::npos) {
-            std::string helpMsg = ":Bot PRIVMSG " + target + " :Available commands: !bot help, !bot time, !bot date, !bot stats, !bot rps <rock|paper|scissors>\r\n";
-            Channel *channel = getChannelByName(target);
-            if (channel) {
-                channel->broadcastMessage(helpMsg, NULL);
-                std::cout << "Bot provided help in channel " << target << std::endl;
-            }
-        } 
-        else if (msg.find("!bot time") != std::string::npos) {
-            time_t now = time(NULL);
-            struct tm *lt = localtime(&now);
-            char timeStr[64];
-            strftime(timeStr, sizeof(timeStr), "%H:%M:%S", lt);
-            std::string timeMsg = ":Bot PRIVMSG " + target + " :Current time is " + std::string(timeStr) + "\r\n";
-            Channel *channel = getChannelByName(target);
-            if (channel) {
-                channel->broadcastMessage(timeMsg, NULL);
-                std::cout << "Bot provided time in channel " << target << std::endl;
-            }
-        } 
-        else if (msg.find("!bot date") != std::string::npos) {
-            time_t now = time(NULL);
-            struct tm *lt = localtime(&now);
-            char dateStr[64];
-            strftime(dateStr, sizeof(dateStr), "%Y-%m-%d", lt);
-            std::string dateMsg = ":Bot PRIVMSG " + target + " :Today's date is " + std::string(dateStr) + "\r\n";
-            Channel *channel = getChannelByName(target);
-            if (channel) {
-                channel->broadcastMessage(dateMsg, NULL);
-                std::cout << "Bot provided date in channel " << target << std::endl;
-            }
-        } 
-        else if (msg.find("!bot stats") != std::string::npos) {
-            Channel *channel = getChannelByName(target);
-            if (channel) {
-                size_t count = channel->getClientCount();
-                std::ostringstream oss;
-                oss << count;
-                std::string statsMsg = ":Bot PRIVMSG " + target + " :There are " + oss.str() + " users in channel " + target + "\r\n";
-                channel->broadcastMessage(statsMsg, NULL);
-                std::cout << "Bot provided stats in channel " << target << std::endl;
-            }
-        } 
-        else if (msg.find("!bot rps") != std::string::npos) {
-            std::istringstream rpsStream(msg);
-            std::string botCmd, rpsCmd, userMove;
-            rpsStream >> botCmd >> rpsCmd >> userMove;
-            if (userMove != "rock" && userMove != "paper" && userMove != "scissors") {
-                std::string errorMsg = ":Bot PRIVMSG " + target + " :Invalid move. Use rock, paper, or scissors.\r\n";
-                Channel *channel = getChannelByName(target);
-                if (channel) {
-                    channel->broadcastMessage(errorMsg, NULL);
-                }
-                return;
-            }
-            srand(time(NULL));
-            int botIndex = rand() % 3;
-            std::string moves[3] = {"rock", "paper", "scissors"};
-            std::string botMove = moves[botIndex];
-            std::string result;
-            if (userMove == botMove) {
-                result = "It's a tie!";
-            } else if ((userMove == "rock" && botMove == "scissors") ||
-                    (userMove == "paper" && botMove == "rock") ||
-                    (userMove == "scissors" && botMove == "paper")) {
-                result = "You win!";
-            } else {
-                result = "I win!";
-            }
-            std::string rpsMsg = ":Bot PRIVMSG " + target + " :You chose " + userMove + ", I chose " + botMove + ". " + result + "\r\n";
-            Channel *channel = getChannelByName(target);
-            if (channel) {
-                channel->broadcastMessage(rpsMsg, NULL);
-                std::cout << "Bot played RPS in channel " << target << std::endl;
-            }
-        }
+        handleBotCommand(target, msg);
         return;
     }
     
