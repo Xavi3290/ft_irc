@@ -4,7 +4,8 @@
 #include <iostream>  // Para salida por consola
 #include <string>
 #include <sstream>
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <algorithm>
 
 void Server::handlePrivMsg(Client *client, std::istringstream &iss)
 {
@@ -20,7 +21,12 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
     std::string msg;
     getline(iss, msg);
 
-    
+	std::cout << "msg: " << msg << std::endl;
+	msg.erase(std::remove(msg.begin(), msg.end(), '\r'), msg.end());
+    if (msg.empty()) {
+		sendReplyTo(client, ERR_NOTEXTTOSEND, "", "No text to send");
+		return;
+	}
 
     if (msg.find("!bot") != std::string::npos) {
         handleBotCommand(target, msg);

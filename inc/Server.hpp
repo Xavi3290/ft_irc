@@ -79,6 +79,7 @@ class Server {
 		void handleInvite(Client *client, std::istringstream &iss);
 		void handleWhois(Client *client, std::istringstream &iss);
 		void handleAway(Client *client, std::istringstream &iss);
+		void handleNotice(Client *client, std::istringstream &iss);
         void handleBotCommand(const std::string &target, const std::string &msg);
 };
 

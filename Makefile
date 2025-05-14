@@ -1,7 +1,7 @@
 NAME = ircserv
 
 CXX = c++
-CXXFLAGS = -Wall -Wextra -Werror -std=c++98 #-g -fsanitize=address
+CXXFLAGS = -Wall -Wextra -Werror -std=c++98 -g -fsanitize=address
 SRCS =  src/main.cpp \
 		src/Utils.cpp \
 		src/classes/Server.cpp \
@@ -26,14 +26,15 @@ SRCS =  src/main.cpp \
 		src/commands/Whois.cpp \
 		src/commands/Away.cpp \
 		src/commands/Bot.cpp \
+		src/commands/Notice.cpp \
 
 		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp inc/Utils.hpp
 OBJS = $(SRCS:.cpp=.o)
 
-all: $(NAME)
+all: $(NAME) 
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) Makefile
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
 %.o: %.cpp $(INCLUDES)

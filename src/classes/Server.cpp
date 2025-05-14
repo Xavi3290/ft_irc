@@ -36,6 +36,7 @@ Server::Server(int port, const std::string &password) : _port(port), _password(p
     _handlers["WHOIS"]   = &Server::handleWhois;
     _handlers["whois"]   = &Server::handleWhois;
     _handlers["AWAY"]    = &Server::handleAway;
+	_handlers["NOTICE"]  = &Server::handleNotice;
 }
 
 Server::~Server()
@@ -265,8 +266,7 @@ void Server::parseCommand(Client *client, const std::string &message) {
         CommandHandler handler = it->second;
         (this->*handler)(client, iss);
     } else {
-        std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
+		sendReplyTo(client, ERR_UNKNOWNCOMMAND, command, "Unknown command");
         std::cout << "Unknown command from client " << client->getFd() << ": " << message << std::endl;
     }
 }
@@ -285,16 +285,17 @@ void Server::handleClientData(size_t i)
                 client->appendBuffer(message);
 
                 std::string &fullBuffer = client->getBuffer();
+				std::cout << "Full Buffer: " << fullBuffer << std::endl;
                 size_t pos;
+				int i = 0;
                 while ((pos = fullBuffer.find("\n")) != std::string::npos) {
+					i++;
+					std::cout << "interadir : " << i << std::endl;
                     std::string rawCommand = fullBuffer.substr(0, pos);
                     fullBuffer.erase(0, pos + 1);
                     parseCommand(client, rawCommand);
                 }
             }
-            else
-                std::cout << "Recived data from unknown client fd: " << _pollFds[i].fd << std::endl;   //sin std::endl para no hacer flush?
-            // Aquí se puede añadir el parseo y la gestión de comandos IRC
         }
         else if (bytes_read == 0)
         {
@@ -306,7 +307,7 @@ void Server::handleClientData(size_t i)
         }
         else
         {
-            if (errno != EWOULDBLOCK && errno != EAGAIN)
+			if (errno != EWOULDBLOCK && errno != EAGAIN)
             {
                 perror("recv");
                 close(_pollFds[i].fd);
