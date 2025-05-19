@@ -3,8 +3,8 @@
 
 #include <string>
 #include <vector>
-#include <sys/poll.h> // Para struct pollfd y la función poll()
-#include <arpa/inet.h>   // Para sockaddr_in, inet_addr()
+#include <sys/poll.h>
+#include <arpa/inet.h> 
 #include <map>           
 #include "Client.hpp"
 #include "Channel.hpp"

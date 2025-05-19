@@ -1,7 +1,7 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream> 
 
@@ -30,21 +30,25 @@ void Server::handleMode(Client *client, std::istringstream &iss) {
 		if (mode == "-t") {
 			channel->setTopicRestricted(false);
 			std::string modeMsg = ":server MODE " + channelName + " -t\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		} 
 		else if (mode == "+t") {
 			channel->setTopicRestricted(true);
 			std::string modeMsg = ":server MODE " + channelName + " +t\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if (mode == "-i") {
 			channel->setInviteOnly(false);
 			std::string modeMsg = ":server MODE " + channelName + " -i\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if (mode == "+i") {
 			channel->setInviteOnly(true);
 			std::string modeMsg = ":server MODE " + channelName + " +i\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if (mode == "+k") {
@@ -56,11 +60,13 @@ void Server::handleMode(Client *client, std::istringstream &iss) {
 			channel->setKeySet(true);
 			channel->setKey(key);
 			std::string modeMsg = ":server MODE " + channelName + " +k " + key + "\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if (mode == "-k") {
 			channel->setKey("");
 			std::string modeMsg = ":server MODE " + channelName + " -k\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if(mode == "+o") {
@@ -80,6 +86,7 @@ void Server::handleMode(Client *client, std::istringstream &iss) {
 			}
 			channel->addOperator(target);
 			std::string modeMsg = ":server MODE " + channelName + " +o " + targetNick + "\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if(mode == "-o") {
@@ -99,6 +106,7 @@ void Server::handleMode(Client *client, std::istringstream &iss) {
 			}
 			channel->removeOperator(target);
 			std::string modeMsg = ":server MODE " + channelName + " -o " + targetNick + "\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if (mode == "+l") {
@@ -112,11 +120,13 @@ void Server::handleMode(Client *client, std::istringstream &iss) {
 			std::string limitStr = ss.str();
 			channel->setMaxClients(limit);
 			std::string modeMsg = ":server MODE " + channelName + " +l " + limitStr + "\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else if (mode == "-l") {
 			channel->setMaxClients(0);
 			std::string modeMsg = ":server MODE " + channelName + " -l\r\n";
+			send(client->getFd(), modeMsg.c_str(), modeMsg.size(), 0);
 			channel->broadcastMessage(modeMsg, client);
 		}
 		else

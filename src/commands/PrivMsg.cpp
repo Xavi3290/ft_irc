@@ -1,7 +1,7 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream>
 #include <stdlib.h>
@@ -36,8 +36,6 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
     Channel *channel = getChannelByName(target);
     if (channel && channel->hasClient(client) && target[0] == '#') {
         sendToChannel(client, target, msg);
-           //std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
-        //channel->broadcastMessage(broadcast, client);
         std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
     } else if(findClientByNick(target)) {
 		if (findClientByNick(target)->isAway()) {

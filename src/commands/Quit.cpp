@@ -1,8 +1,8 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
-#include <unistd.h>  // Para close(), read()
+#include <iostream>
+#include <unistd.h>
 #include <string>
 #include <sstream> 
 
@@ -25,6 +25,5 @@ void Server::handleQuit(Client *client, std::istringstream &iss)
         }
     }
 	removeClientChannel(client->getFd());
-    // close(client->getFd());
     removeClient(client->getFd());
 }

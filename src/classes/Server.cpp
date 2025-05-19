@@ -2,16 +2,16 @@
 #include "../../inc/NumericReplies.hpp"
 #include "../../inc/Utils.hpp"
 
-#include <iostream>  // Para salida por consola
-#include <cstdlib>    // Para atoi() y EXIT_SUCCESS/EXIT_FAILURE
-#include <cstring>    // Para memset()
-#include <cerrno>      // Para manejo de errores
-#include <unistd.h>  // Para close(), read()
-#include <fcntl.h>    // Para fcntl()
+#include <iostream> 
+#include <cstdlib>
+#include <cstring>
+#include <cerrno>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
-#include <sys/socket.h> // Para socket(), bind(), listen(), accept(), setsockopt(), send(), recv()
-#include <netinet/in.h> // Para sockaddr_in y htons()
-#include <cstdio>      // Para perror()
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstdio>
 #include <sstream> 
 #include <set>
 
@@ -133,7 +133,6 @@ bool Server::setupSocket() {
         return false;
     }
         
-    // Permitir reutilizar la dirección
     int opt = 1;
     if (setsockopt(_listenFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         perror("setsockopt");
@@ -141,13 +140,11 @@ bool Server::setupSocket() {
         return false;
     }
 
-    // Configurar el socket en modo no bloqueante
     if (!setNonBlocking(_listenFd)) {
         close(_listenFd);
         return false;
     }
 
-    // Configurar la direccion del servidor (IP: cualquier dirección local, puerto especificado)
     _addrlen = sizeof(_server_addr);
     std::memset(&_server_addr, 0, _addrlen);
     _server_addr.sin_family = AF_INET;
@@ -160,17 +157,15 @@ bool Server::setupSocket() {
         return false;
     }
         
-    // Poner el socket a escuchar conexiones entrantes
     if (listen(_listenFd, SOMAXCONN) < 0) {
         perror("listen");
         close(_listenFd);
         return false;
     }
 
-    // Inicializar poll() con el socket de escucha
     struct pollfd listen_poll;
     listen_poll.fd = _listenFd;
-    listen_poll.events = POLLIN; // Monitorizar para ver si hay datos entrantes (nuevas conexiones)
+    listen_poll.events = POLLIN;
     _pollFds.push_back(listen_poll);
 
     std::cout << "Server IRC listening on port " << _port << std::endl;
@@ -182,8 +177,6 @@ bool Server::init() {
 }
 
 void Server::handleNewConnection() {
-    //struct sockaddr_in client_addr;
-    //socklen_t client_len = sizeof(client_addr);
     int client_fd = accept(_listenFd, (struct sockaddr *)&_server_addr, &_addrlen);
     if (client_fd >= 0) {
         if (!setNonBlocking(client_fd)) {
@@ -192,7 +185,7 @@ void Server::handleNewConnection() {
         }
         struct pollfd client_poll;
         client_poll.fd = client_fd;
-        client_poll.events = POLLIN; // Monitorizar para ver si hay datos entrantes
+        client_poll.events = POLLIN;
         _pollFds.push_back(client_poll);
 
         Client *newClient = new Client(client_fd);
@@ -216,17 +209,6 @@ Client *Server::findClientByFd(int fd) {
 }
 
 void Server::removeClient(int fd) {
-    // for (std::vector<pollfd>::iterator it = _pollFds.begin(); it != _pollFds.end(); ++it)
-    // {
-    //     if (it->fd == fd)
-    //     {
-    //         _pollFds.erase(it);
-    //         break;
-    //     }
-    // }
-
-    // delete _clients[it];
-    // _clients.erase(fd);
     for (size_t i = 0; i < _clients.size(); i++) {
         if (_clients[i]->getFd() == fd) {
 			close(_clients[i]->getFd());
@@ -328,18 +310,13 @@ void Server::run() {
             break;
         }
         
-        // Revisar si el socket de escucha tiene nuevas conexiones
         if (_pollFds[0].revents & POLLIN) {
             handleNewConnection();
         }
 
-        // Procesar cada cliente conectado (empezando desde el índice 1)
         for (size_t i = 1; i < _pollFds.size(); i++) {
-            if (_pollFds[i].revents & POLLIN) {
+            if (_pollFds[i].revents & POLLIN)
                 handleClientData(i);
-                // Dado que el vector _pollFds puede modificarse (al eliminar un cliente desconectado), reajustamos el índice
-                //i--;
-            }
         }
     }  
 }

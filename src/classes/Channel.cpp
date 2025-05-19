@@ -4,7 +4,7 @@
 #include <sys/socket.h>
 #include <iostream>
 #include <sstream>
-#include <cctype>   // para std::tolower
+#include <cctype>
 
 Channel::Channel(const std::string &name) {
 	_originalName = name;

@@ -1,5 +1,5 @@
 #include "../../inc/Client.hpp"
-#include <sys/socket.h> // send()
+#include <sys/socket.h>
 #include <iostream>
 
 Client::Client(int fd)

@@ -1,10 +1,10 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream> 
-#include <cctype>   // para std::tolower
+#include <cctype>
 
 void Server::handleJoin(Client *client, std::istringstream &iss)
 {
@@ -53,23 +53,6 @@ void Server::handleJoin(Client *client, std::istringstream &iss)
     
     std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channel->getOriginalName() + "\r\n";
     channel->broadcastMessage(joinMsg, NULL);
-    
-    //////////////////////////////////MAX VERSION////////////////////////////////////////////////////
-    // //SI NO HAY TOPIC
-
-    // //sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
-
-    // //LISTAR USUARIOS
-    // const std::vector<Client *> &clients = channel->getClients();
-    // std::string nameList;
-    // for (size_t i = 0; i < clients.size(); ++i)
-    //     nameList += clients[i]->getNickname() + " ";
-
-    // std::string namesReply = ":irc.42.localhost 353 " + client->getNickname() + " = " + channelName + " :" + nameList + "\r\n";
-    // send(client->getFd(), namesReply.c_str(), namesReply.size(), 0);
-    // sendReplyTo(client, RPL_ENDOFNAMES, channelName, "End of /NAMES list");
-
-    //////////////////////////////////GUILLE VERSION////////////////////////////////////////////////////
 
     if (channel) {
 		
