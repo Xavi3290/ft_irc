@@ -19,7 +19,7 @@ void Server::handlePart(Client *client, std::istringstream &iss)
     }
     Channel *channel = getChannelByName(channelName);
     if (!channel) {
-        sendReplyTo(client, ERR_NOSUCHCHANNEL, channel->getOriginalName(), "No such channel");
+        sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
         return;
     }
     else if (channel->hasClient(client)) {
