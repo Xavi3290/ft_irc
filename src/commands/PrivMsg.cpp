@@ -21,7 +21,6 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
     std::string msg;
     getline(iss, msg);
 
-	std::cout << "msg: " << msg << std::endl;
 	msg.erase(std::remove(msg.begin(), msg.end(), '\r'), msg.end());
     if (msg.empty()) {
 		sendReplyTo(client, ERR_NOTEXTTOSEND, "", "No text to send");

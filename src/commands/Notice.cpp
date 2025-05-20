@@ -11,8 +11,6 @@ void Server::handleNotice(Client *client, std::istringstream &iss)
 {
 	std::string target;
     std::string msg;
-	std::cout << "msg: " << msg << std::endl;
-	std::cout << "target: " << target << std::endl;
     if (!(iss >> target)){
         return;
 	}
