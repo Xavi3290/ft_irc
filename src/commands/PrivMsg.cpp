@@ -39,7 +39,6 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
         std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
     } else if(findClientByNick(target)) {
 		if (findClientByNick(target)->isAway()) {
-			std::cout << "teeeeest" << std::endl;
 			std::string awayMsg = ":server 301 " + client->getNickname() + " " +
 			target + findClientByNick(target)->getAwayMessage() + "\r\n";
 			send(client->getFd(), awayMsg.c_str(), awayMsg.size(), 0);

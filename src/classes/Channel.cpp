@@ -47,9 +47,10 @@ bool Channel::hasClient(Client *client) const {
 }
 
 void Channel::broadcastMessage(const std::string &message, Client *sender) {
+
     for (size_t i = 0; i < _clients.size(); i++) {
-        if (_clients[i] != sender) {
-            send(_clients[i]->getFd(), message.c_str(), message.size(), 0);
+		if (_clients[i] && _clients[i] != sender) {
+	        send(_clients[i]->getFd(), message.c_str(), message.size(), 0);
         }
     }
 }

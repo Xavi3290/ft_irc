@@ -211,6 +211,21 @@ Client *Server::findClientByFd(int fd) {
 void Server::removeClient(int fd) {
     for (size_t i = 0; i < _clients.size(); i++) {
         if (_clients[i]->getFd() == fd) {
+
+			for (size_t j = 0; j < _channels.size(); j++) {
+				Channel *channel = _channels[j];
+				if (channel->hasClient(_clients[i])) {
+					channel->removeClient(_clients[i]);
+					if (channel->getClients().empty()) {
+						delete channel;
+						_channels.erase(_channels.begin() + j);
+					}
+					else
+						channel->broadcastMessage(":" + _clients[i]->getNickname() + " PART " + channel->getOriginalName() + "\r\n", _clients[i]);
+				}
+			}
+
+			std::cout << "Client " << fd << " removed" << std::endl;
 			close(_clients[i]->getFd());
             delete _clients[i];
             _clients.erase(_clients.begin() + i);
@@ -268,12 +283,10 @@ void Server::handleClientData(size_t i)
                 client->appendBuffer(message);
 
                 std::string &fullBuffer = client->getBuffer();
-				std::cout << "Full Buffer: " << fullBuffer << std::endl;
                 size_t pos;
 				int i = 0;
                 while ((pos = fullBuffer.find("\n")) != std::string::npos) {
 					i++;
-					std::cout << "interadir : " << i << std::endl;
                     std::string rawCommand = fullBuffer.substr(0, pos);
                     fullBuffer.erase(0, pos + 1);
                     parseCommand(client, rawCommand);

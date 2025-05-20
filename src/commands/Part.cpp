@@ -3,7 +3,9 @@
 
 #include <iostream>
 #include <string>
-#include <sstream> 
+#include <sstream>
+#include <algorithm>
+
 
 void Server::handlePart(Client *client, std::istringstream &iss)
 {
@@ -28,7 +30,13 @@ void Server::handlePart(Client *client, std::istringstream &iss)
  		std::string partMsg = ":" + client->getPrefix() + " PART " + channel->getOriginalName() + "\r\n";
         send(client->getFd(), partMsg.c_str(), partMsg.size(), 0);
 		channel->broadcastMessage(partMsg, client);
-		removeClientChannel(client->getFd());
+		channel->removeClient(client);
+		if (channel->getClients().empty()) {
+			delete channel;
+			_channels.erase(std::remove(_channels.begin(), _channels.end(), channel), _channels.end());
+		}
+		else
+			channel->broadcastMessage(":" + client->getNickname() + " PART " + channel->getOriginalName() + "\r\n", client);
 	}
 	else
         sendReplyTo(client, ERR_NOTONCHANNEL, channelName, "You're not on that channel");

@@ -49,8 +49,7 @@ void Server::handleTopic(Client *client, std::istringstream &iss)
         return;
     }
 	channel->setTopic(newTopic);
-	std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + newTopic + "\r\n";
-	send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
 	std::string broadcast = ":" + client->getNickname() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+	send(client->getFd(), broadcast.c_str(), broadcast.size(), 0);
 	channel->broadcastMessage(broadcast, client);
 }
