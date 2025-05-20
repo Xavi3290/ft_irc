@@ -2,14 +2,14 @@
 #include "../../inc/NumericReplies.hpp"
 #include "../../inc/Utils.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream>
-#include <cctype>   // para std::tolower
+#include <cctype>
 #include <set>
 
 bool isValidNick(const std::string &nick) {
-    if (nick.length() > 15) // puedes ajustar el límite
+    if (nick.length() > 15)
         return false;
 
     char first = nick[0];

@@ -1,7 +1,7 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream> 
 
@@ -27,6 +27,10 @@ void Server::handleInvite(Client *client, std::istringstream &iss) {
 		}
 		if (channel->isInvited(target)) {
 			sendReplyTo(client, ERR_USERONCHANNEL, targetNick + " " + channelName, "User is already on the channel");
+			return;
+		}
+		if (channel->isInviteOnly() && !channel->isOperator(client)) {
+			sendReplyTo(client, ERR_CHANOPRIVSNEEDED, channelName, "You're not channel operator");
 			return;
 		}
 		channel->addInvited(target);

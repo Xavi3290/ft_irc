@@ -1,7 +1,7 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream> 
 
@@ -49,5 +49,6 @@ void Server::handleKick(Client *client, std::istringstream &iss)
     std::string kickMsg = ":server KICK " + channelName + " " + targetNick + " :You have been kicked from the channel\r\n";
     send(target->getFd(), kickMsg.c_str(), kickMsg.size(), 0);
     std::string broadcast = ":" + client->getNickname() + " KICK " + channelName + " " + targetNick + " :has been kicked from the channel\r\n";
+	send(client->getFd(), broadcast.c_str(), broadcast.size(), 0);
     channel->broadcastMessage(broadcast, client);
 }

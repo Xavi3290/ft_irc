@@ -26,14 +26,15 @@ SRCS =  src/main.cpp \
 		src/commands/Whois.cpp \
 		src/commands/Away.cpp \
 		src/commands/Bot.cpp \
+		src/commands/Notice.cpp \
 
 		
 INCLUDES = inc/Server.hpp inc/Client.hpp inc/Channel.hpp inc/NumericReplies.hpp inc/Utils.hpp
 OBJS = $(SRCS:.cpp=.o)
 
-all: $(NAME)
+all: $(NAME) 
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJS) Makefile
 	$(CXX) $(CXXFLAGS) $(OBJS) -o $(NAME)
 
 %.o: %.cpp $(INCLUDES)

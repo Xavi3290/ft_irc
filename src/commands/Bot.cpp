@@ -9,19 +9,31 @@
 void Server::handleBotCommand(const std::string &target, const std::string &msg)
 {
     Channel *channel = getChannelByName(target);
-    if (!channel) return;
+    if (!channel)
+        return;
+    std::istringstream ss(msg);
+    std::string botTag, cmd;
+    std::string userMove;
 
-    if (msg.find("!bot hello") != std::string::npos) {
+    ss >> botTag >> cmd >> userMove;
+    if (botTag != ":!bot" && botTag != ":!Bot")
+        return;
+    ss >> cmd;
+
+    if (cmd == "hello")
+    {
         std::string botResponse = ":Bot PRIVMSG " + target + " :Hello, I am Bot!\r\n";
         channel->broadcastMessage(botResponse, NULL);
         std::cout << "Bot responded in channel " << target << std::endl;
     }
-    else if (msg.find("!bot help") != std::string::npos) {
+    else if (cmd == "help")
+    {
         std::string helpMsg = ":Bot PRIVMSG " + target + " :Available commands: !bot help, !bot time, !bot date, !bot stats, !bot rps <rock|paper|scissors>\r\n";
         channel->broadcastMessage(helpMsg, NULL);
         std::cout << "Bot provided help in channel " << target << std::endl;
     }
-    else if (msg.find("!bot time") != std::string::npos) {
+    else if (cmd == "time")
+    {
         time_t now = time(NULL);
         struct tm *lt = localtime(&now);
         char timeStr[64];
@@ -30,7 +42,8 @@ void Server::handleBotCommand(const std::string &target, const std::string &msg)
         channel->broadcastMessage(timeMsg, NULL);
         std::cout << "Bot provided time in channel " << target << std::endl;
     }
-    else if (msg.find("!bot date") != std::string::npos) {
+    else if (cmd == "date")
+    {
         time_t now = time(NULL);
         struct tm *lt = localtime(&now);
         char dateStr[64];
@@ -39,7 +52,8 @@ void Server::handleBotCommand(const std::string &target, const std::string &msg)
         channel->broadcastMessage(dateMsg, NULL);
         std::cout << "Bot provided date in channel " << target << std::endl;
     }
-    else if (msg.find("!bot stats") != std::string::npos) {
+    else if (cmd == "stats")
+    {
         size_t count = channel->getClientCount();
         std::ostringstream oss;
         oss << count;
@@ -47,31 +61,45 @@ void Server::handleBotCommand(const std::string &target, const std::string &msg)
         channel->broadcastMessage(statsMsg, NULL);
         std::cout << "Bot provided stats in channel " << target << std::endl;
     }
-    else if (msg.find("!bot rps") != std::string::npos) {
-        std::istringstream rpsStream(msg);
-            std::string botCmd, rpsCmd, userMove;
-            rpsStream >> botCmd >> rpsCmd >> userMove;
-            if (userMove != "rock" && userMove != "paper" && userMove != "scissors") {
-                std::string errorMsg = ":Bot PRIVMSG " + target + " :Invalid move. Use rock, paper, or scissors.\r\n";
-                channel->broadcastMessage(errorMsg, NULL);
-                return;
-            }
+    else if (cmd == "rps")
+    {
+        ss >> userMove;
+        if (userMove != "rock" && userMove != "paper" && userMove != "scissors")
+        {
+            std::string errorMsg = ":Bot PRIVMSG " + target + " :Please provide your move: rock, paper, or scissors.\r\n";
+            channel->broadcastMessage(errorMsg, NULL);
+            return;
+        }
+        else
+        {
             srand(time(NULL));
             int botIndex = rand() % 3;
             std::string moves[3] = {"rock", "paper", "scissors"};
             std::string botMove = moves[botIndex];
             std::string result;
-            if (userMove == botMove) {
+            if (userMove == botMove)
+            {
                 result = "It's a tie!";
-            } else if ((userMove == "rock" && botMove == "scissors") ||
-                    (userMove == "paper" && botMove == "rock") ||
-                    (userMove == "scissors" && botMove == "paper")) {
+            }
+            else if ((userMove == "rock" && botMove == "scissors") ||
+                     (userMove == "paper" && botMove == "rock") ||
+                     (userMove == "scissors" && botMove == "paper"))
+            {
                 result = "You win!";
-            } else {
+            }
+            else
+            {
                 result = "I win!";
             }
             std::string rpsMsg = ":Bot PRIVMSG " + target + " :You chose " + userMove + ", I chose " + botMove + ". " + result + "\r\n";
             channel->broadcastMessage(rpsMsg, NULL);
-            std::cout << "Bot played RPS in channel " << target << std::endl;     
+            std::cout << "Bot played RPS in channel " << target << std::endl;
+        }
+    }
+    else
+    {
+        std::string errorMsg = ":Bot PRIVMSG " + target + " :Unknown command. Type !bot help for a list of commands.\r\n";
+        channel->broadcastMessage(errorMsg, NULL);
+        std::cout << "Bot received unknown command in channel " << target << std::endl;
     }
 }

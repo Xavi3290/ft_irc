@@ -1,17 +1,5 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Client.cpp                                         :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/17 22:01:09 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/26 19:51:12 by xroca-pe         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../inc/Client.hpp"
-#include <sys/socket.h> // send()
+#include <sys/socket.h>
 #include <iostream>
 
 Client::Client(int fd)

@@ -1,22 +1,10 @@
-/* ************************************************************************** */
-/*                                                                            */
-/*                                                        :::      ::::::::   */
-/*   Channel.cpp                                        :+:      :+:    :+:   */
-/*                                                    +:+ +:+         +:+     */
-/*   By: xroca-pe <xroca-pe@student.42barcel>       +#+  +:+       +#+        */
-/*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/03/18 19:04:58 by xroca-pe          #+#    #+#             */
-/*   Updated: 2025/03/27 17:51:59 by xroca-pe         ###   ########.fr       */
-/*                                                                            */
-/* ************************************************************************** */
-
 #include "../../inc/Channel.hpp"
 #include "../../inc/Utils.hpp"
 #include <algorithm>
 #include <sys/socket.h>
 #include <iostream>
 #include <sstream>
-#include <cctype>   // para std::tolower
+#include <cctype>
 
 Channel::Channel(const std::string &name) {
 	_originalName = name;
@@ -59,9 +47,10 @@ bool Channel::hasClient(Client *client) const {
 }
 
 void Channel::broadcastMessage(const std::string &message, Client *sender) {
+
     for (size_t i = 0; i < _clients.size(); i++) {
-        if (_clients[i] != sender) {
-            send(_clients[i]->getFd(), message.c_str(), message.size(), 0);
+		if (_clients[i] && _clients[i] != sender) {
+	        send(_clients[i]->getFd(), message.c_str(), message.size(), 0);
         }
     }
 }

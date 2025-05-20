@@ -2,21 +2,42 @@
 #include "../../inc/NumericReplies.hpp"
 #include "../../inc/Utils.hpp"
 
-#include <iostream>  // Para salida por consola
-#include <cstdlib>    // Para atoi() y EXIT_SUCCESS/EXIT_FAILURE
-#include <cstring>    // Para memset()
-#include <cerrno>      // Para manejo de errores
-#include <unistd.h>  // Para close(), read()
-#include <fcntl.h>    // Para fcntl()
+#include <iostream> 
+#include <cstdlib>
+#include <cstring>
+#include <cerrno>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/types.h>
-#include <sys/socket.h> // Para socket(), bind(), listen(), accept(), setsockopt(), send(), recv()
-#include <netinet/in.h> // Para sockaddr_in y htons()
-#include <cstdio>      // Para perror()
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <cstdio>
 #include <sstream> 
 #include <set>
 
 
-Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {}
+Server::Server(int port, const std::string &password) : _port(port), _password(password), _listenFd(-1) {
+
+    _handlers["PASS"]    = &Server::handlePass;
+    _handlers["NICK"]    = &Server::handleNick;
+    _handlers["USER"]    = &Server::handleUser;
+    _handlers["PING"]    = &Server::handlePing;
+    _handlers["JOIN"]    = &Server::handleJoin;
+    _handlers["PRIVMSG"] = &Server::handlePrivMsg;
+    _handlers["PART"]    = &Server::handlePart;
+    _handlers["LIST"]    = &Server::handleList;
+    _handlers["NAMES"]   = &Server::handleNames;
+    _handlers["KICK"]    = &Server::handleKick;
+    _handlers["TOPIC"]   = &Server::handleTopic;
+    _handlers["QUIT"]    = &Server::handleQuit;
+    _handlers["WHO"]     = &Server::handleWho;
+    _handlers["MODE"]    = &Server::handleMode;
+    _handlers["INVITE"]  = &Server::handleInvite;
+    _handlers["WHOIS"]   = &Server::handleWhois;
+    _handlers["whois"]   = &Server::handleWhois;
+    _handlers["AWAY"]    = &Server::handleAway;
+	_handlers["NOTICE"]  = &Server::handleNotice;
+}
 
 Server::~Server()
 {
@@ -112,7 +133,6 @@ bool Server::setupSocket() {
         return false;
     }
         
-    // Permitir reutilizar la dirección
     int opt = 1;
     if (setsockopt(_listenFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
         perror("setsockopt");
@@ -120,13 +140,11 @@ bool Server::setupSocket() {
         return false;
     }
 
-    // Configurar el socket en modo no bloqueante
     if (!setNonBlocking(_listenFd)) {
         close(_listenFd);
         return false;
     }
 
-    // Configurar la direccion del servidor (IP: cualquier dirección local, puerto especificado)
     _addrlen = sizeof(_server_addr);
     std::memset(&_server_addr, 0, _addrlen);
     _server_addr.sin_family = AF_INET;
@@ -139,17 +157,15 @@ bool Server::setupSocket() {
         return false;
     }
         
-    // Poner el socket a escuchar conexiones entrantes
     if (listen(_listenFd, SOMAXCONN) < 0) {
         perror("listen");
         close(_listenFd);
         return false;
     }
 
-    // Inicializar poll() con el socket de escucha
     struct pollfd listen_poll;
     listen_poll.fd = _listenFd;
-    listen_poll.events = POLLIN; // Monitorizar para ver si hay datos entrantes (nuevas conexiones)
+    listen_poll.events = POLLIN;
     _pollFds.push_back(listen_poll);
 
     std::cout << "Server IRC listening on port " << _port << std::endl;
@@ -161,8 +177,6 @@ bool Server::init() {
 }
 
 void Server::handleNewConnection() {
-    //struct sockaddr_in client_addr;
-    //socklen_t client_len = sizeof(client_addr);
     int client_fd = accept(_listenFd, (struct sockaddr *)&_server_addr, &_addrlen);
     if (client_fd >= 0) {
         if (!setNonBlocking(client_fd)) {
@@ -171,7 +185,7 @@ void Server::handleNewConnection() {
         }
         struct pollfd client_poll;
         client_poll.fd = client_fd;
-        client_poll.events = POLLIN; // Monitorizar para ver si hay datos entrantes
+        client_poll.events = POLLIN;
         _pollFds.push_back(client_poll);
 
         Client *newClient = new Client(client_fd);
@@ -195,19 +209,24 @@ Client *Server::findClientByFd(int fd) {
 }
 
 void Server::removeClient(int fd) {
-    // for (std::vector<pollfd>::iterator it = _pollFds.begin(); it != _pollFds.end(); ++it)
-    // {
-    //     if (it->fd == fd)
-    //     {
-    //         _pollFds.erase(it);
-    //         break;
-    //     }
-    // }
-
-    // delete _clients[it];
-    // _clients.erase(fd);
     for (size_t i = 0; i < _clients.size(); i++) {
         if (_clients[i]->getFd() == fd) {
+
+			for (size_t j = 0; j < _channels.size(); j++) {
+				Channel *channel = _channels[j];
+				if (channel->hasClient(_clients[i])) {
+					channel->removeClient(_clients[i]);
+					if (channel->getClients().empty()) {
+						delete channel;
+						_channels.erase(_channels.begin() + j);
+					}
+					else
+						channel->broadcastMessage(":" + _clients[i]->getNickname() + " PART " + channel->getOriginalName() + "\r\n", _clients[i]);
+				}
+			}
+
+			std::cout << "Client " << fd << " removed" << std::endl;
+			close(_clients[i]->getFd());
             delete _clients[i];
             _clients.erase(_clients.begin() + i);
             break;
@@ -240,49 +259,13 @@ void Server::parseCommand(Client *client, const std::string &message) {
 
 
 	std::cout << "Command: " << message << std::endl;
-    if (command != "PASS" && !client->hasProvidedPass()) {
-		sendReplyTo(client, ERR_NOTREGISTERED, "", "You have not registered");
-        return;
-    }
-
-    if (command == "PASS")
-        handlePass(client, iss); 
-    else if (command == "NICK")
-        handleNick(client, iss);
-    else if (command == "USER")
-        handleUser(client, iss);
-    else if (command == "PING")
-        handlePing(client, iss);
-    else if (command == "JOIN")
-        handleJoin(client, iss);
-    else if (command == "PRIVMSG")
-        handlePrivMsg(client, iss);
-    else if (command == "PART")
-        handlePart(client, iss);
-	else if (command == "LIST")
-        handleList(client);
-	else if (command == "NAMES")
-        handleNames(client, iss);
-	else if (command == "KICK")
-        handleKick(client, iss);
-	else if (command == "TOPIC")
-        handleTopic(client, iss);
-	else if (command == "QUIT")
-        handleQuit(client, iss);
-	else if (command == "WHO")
-		handleWho(client, iss);
-	else if (command == "MODE")
-		handleMode(client, iss);
-	else if (command == "INVITE")
-		handleInvite(client, iss);
-	else if (command == "WHOIS" || command == "whois")
-		handleWhois(client, iss);
-	else if (command == "AWAY") 
-		handleAway(client, iss);
-    else {
-        std::string errorMsg = ":server 421 " + command + " :Unknown command\r\n";
-        send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
-        std::cout << "Unknown command from client " << client->getFd() << ": " << message;
+    std::map<std::string, CommandHandler>::iterator it = _handlers.find(command);
+    if (it != _handlers.end()) {
+        CommandHandler handler = it->second;
+        (this->*handler)(client, iss);
+    } else {
+		sendReplyTo(client, ERR_UNKNOWNCOMMAND, command, "Unknown command");
+        std::cout << "Unknown command from client " << client->getFd() << ": " << message << std::endl;
     }
 }
 
@@ -301,15 +284,14 @@ void Server::handleClientData(size_t i)
 
                 std::string &fullBuffer = client->getBuffer();
                 size_t pos;
+				int i = 0;
                 while ((pos = fullBuffer.find("\n")) != std::string::npos) {
+					i++;
                     std::string rawCommand = fullBuffer.substr(0, pos);
                     fullBuffer.erase(0, pos + 1);
                     parseCommand(client, rawCommand);
                 }
             }
-            else
-                std::cout << "Recived data from unknown client fd: " << _pollFds[i].fd << std::endl;   //sin std::endl para no hacer flush?
-            // Aquí se puede añadir el parseo y la gestión de comandos IRC
         }
         else if (bytes_read == 0)
         {
@@ -321,7 +303,7 @@ void Server::handleClientData(size_t i)
         }
         else
         {
-            if (errno != EWOULDBLOCK && errno != EAGAIN)
+			if (errno != EWOULDBLOCK && errno != EAGAIN)
             {
                 perror("recv");
                 close(_pollFds[i].fd);
@@ -341,18 +323,13 @@ void Server::run() {
             break;
         }
         
-        // Revisar si el socket de escucha tiene nuevas conexiones
         if (_pollFds[0].revents & POLLIN) {
             handleNewConnection();
         }
 
-        // Procesar cada cliente conectado (empezando desde el índice 1)
         for (size_t i = 1; i < _pollFds.size(); i++) {
-            if (_pollFds[i].revents & POLLIN) {
+            if (_pollFds[i].revents & POLLIN)
                 handleClientData(i);
-                // Dado que el vector _pollFds puede modificarse (al eliminar un cliente desconectado), reajustamos el índice
-                //i--;
-            }
         }
     }  
 }

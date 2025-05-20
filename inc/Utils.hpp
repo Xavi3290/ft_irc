@@ -2,8 +2,7 @@
 #define UTILS_HPP
 
 #include <string>
-#include <cctype>   // para std::tolower
-
+#include <cctype>
 
 std::string toLower(const std::string& str);
 

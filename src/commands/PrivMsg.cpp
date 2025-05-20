@@ -1,10 +1,11 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
 #include <sstream>
-#include <stdlib.h> 
+#include <stdlib.h>
+#include <algorithm>
 
 void Server::handlePrivMsg(Client *client, std::istringstream &iss)
 {
@@ -20,7 +21,11 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
     std::string msg;
     getline(iss, msg);
 
-    
+	msg.erase(std::remove(msg.begin(), msg.end(), '\r'), msg.end());
+    if (msg.empty()) {
+		sendReplyTo(client, ERR_NOTEXTTOSEND, "", "No text to send");
+		return;
+	}
 
     if (msg.find("!bot") != std::string::npos) {
         handleBotCommand(target, msg);
@@ -30,12 +35,9 @@ void Server::handlePrivMsg(Client *client, std::istringstream &iss)
     Channel *channel = getChannelByName(target);
     if (channel && channel->hasClient(client) && target[0] == '#') {
         sendToChannel(client, target, msg);
-           //std::string broadcast = ":" + client->getNickname() + " " + target + " " + msg + "\r\n";
-        //channel->broadcastMessage(broadcast, client);
         std::cout << "Broadcast message from client " << client->getFd() << " to channel " << target << std::endl;
     } else if(findClientByNick(target)) {
 		if (findClientByNick(target)->isAway()) {
-			std::cout << "teeeeest" << std::endl;
 			std::string awayMsg = ":server 301 " + client->getNickname() + " " +
 			target + findClientByNick(target)->getAwayMessage() + "\r\n";
 			send(client->getFd(), awayMsg.c_str(), awayMsg.size(), 0);

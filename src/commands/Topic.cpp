@@ -1,9 +1,12 @@
 #include "../../inc/Server.hpp"
 #include "../../inc/NumericReplies.hpp"
 
-#include <iostream>  // Para salida por consola
+#include <iostream>
 #include <string>
-#include <sstream> 
+#include <sstream>
+#include <algorithm>
+
+
 
 void Server::handleTopic(Client *client, std::istringstream &iss)
 {
@@ -13,20 +16,28 @@ void Server::handleTopic(Client *client, std::istringstream &iss)
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
-    std::getline(iss, newTopic);
-    if(!newTopic.empty() && newTopic[0] == ' ')
-		if (newTopic[1] == ':')
-			newTopic = newTopic.substr(2);
-        else
-			newTopic = newTopic.substr(1);
-    else
-        newTopic = "No topic";
     Channel *channel = getChannelByName(channelName);
     if (!channel) {
         std::string errorMsg = ":server 403 " + channelName + " :No such nick/channel\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
+
+    std::getline(iss, newTopic);
+	newTopic.erase(std::remove(newTopic.begin(), newTopic.end(), '\r'), newTopic.end());
+	if (newTopic[0] == ' ')
+		newTopic = newTopic.substr(1);
+	if (!newTopic.empty() && newTopic[0] == ':')
+		newTopic = newTopic.substr(1);
+	if (newTopic.empty() && !channel->getTopic().empty()) {
+		std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + channel->getTopic() + "\r\n";
+		send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
+		return;
+	}
+    else if (newTopic.empty() && channel->getTopic().empty()) {
+		sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
+		return;
+	}
     if (!channel->isOperator(client) && channel->isTopicRestricted()) {
         std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
@@ -37,13 +48,8 @@ void Server::handleTopic(Client *client, std::istringstream &iss)
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
-    if (newTopic == "No topic")
-        sendReplyTo(client, RPL_NOTOPIC, channelName, "No topic is set");
-    else {
-        std::string topicMsg = ":server 332 " + client->getNickname() + " " + channelName + " :" + newTopic + "\r\n";
-        send(client->getFd(), topicMsg.c_str(), topicMsg.size(), 0);
-    }
-    std::string broadcast = ":" + client->getNickname() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
-    channel->setTopic(newTopic);
-    channel->broadcastMessage(broadcast, client);
+	channel->setTopic(newTopic);
+	std::string broadcast = ":" + client->getNickname() + " TOPIC " + channelName + " :" + newTopic + "\r\n";
+	send(client->getFd(), broadcast.c_str(), broadcast.size(), 0);
+	channel->broadcastMessage(broadcast, client);
 }
