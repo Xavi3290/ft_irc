@@ -19,13 +19,13 @@ void Server::handleKick(Client *client, std::istringstream &iss)
     else
         reason = "No reason";
     Channel *channel = getChannelByName(channelName);
-    if (!channel->isOperator(client)) {
-        std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
+    if (!channel) {
+        std::string errorMsg = ":server 403 " + client->getNickname() + " " + channelName + " :No such channel\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
-    if (!channel) {
-        std::string errorMsg = ":server 403 " + client->getNickname() + " " + channelName + " :No such channel\r\n";
+    if (!channel->isOperator(client)) {
+        std::string errorMsg = ":server 482 " + client->getNickname() + " " + channelName + " :You're not channel operator\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
@@ -35,13 +35,13 @@ void Server::handleKick(Client *client, std::istringstream &iss)
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
-    if (!channel->hasClient(client)) {
-        std::string errorMsg = ":server 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n";
+    if (!channel->hasClient(target)) {
+        std::string errorMsg = ":server 441 " + client->getNickname() + " " + targetNick + " :They're not on that channel\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }
-    if (!channel->hasClient(target)) {
-        std::string errorMsg = ":server 441 " + client->getNickname() + " " + targetNick + " :They're not on that channel\r\n";
+    if (!channel->hasClient(client)) {
+        std::string errorMsg = ":server 442 " + client->getNickname() + " " + channelName + " :You're not on that channel\r\n";
         send(client->getFd(), errorMsg.c_str(), errorMsg.size(), 0);
         return;
     }

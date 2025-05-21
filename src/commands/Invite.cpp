@@ -21,16 +21,16 @@ void Server::handleInvite(Client *client, std::istringstream &iss) {
 			sendReplyTo(client, ERR_NOSUCHCHANNEL, channelName, "No such channel");
 			return;
 		}
-		if (!channel->isInviteOnly()) {
-			sendReplyTo(client, ERR_CHANNELISFULL, channelName, "Cannot join channel (+l)");
-			return;
-		}
-		if (channel->isInvited(target)) {
-			sendReplyTo(client, ERR_USERONCHANNEL, targetNick + " " + channelName, "User is already on the channel");
+		if (!channel->hasClient(client)) {
+			sendReplyTo(client, ERR_NOTONCHANNEL, channelName, "You're not on the channel");
 			return;
 		}
 		if (channel->isInviteOnly() && !channel->isOperator(client)) {
 			sendReplyTo(client, ERR_CHANOPRIVSNEEDED, channelName, "You're not channel operator");
+			return;
+		}
+		if (channel->isInvited(target)) {
+			sendReplyTo(client, ERR_USERONCHANNEL, targetNick + " " + channelName, "User is already on the channel");
 			return;
 		}
 		channel->addInvited(target);
