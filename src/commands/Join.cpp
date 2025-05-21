@@ -49,6 +49,8 @@ void Server::handleJoin(Client *client, std::istringstream &iss)
             return;
         }
         channel->addClient(client);
+		if (channel->isInvited(client))
+			channel->removeInvited(client);
     }
     
     std::string joinMsg = ":" + client->getPrefix() + " JOIN :" + channel->getOriginalName() + "\r\n";
